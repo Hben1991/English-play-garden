@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/voices", "destination": "/api/voices" },
     { "source": "/api/tts", "destination": "/api/tts" },
-    { "source": "/api/health", "destination": "/api/health" }
+    { "source": "/api/health", "destination": "/api/health" },
+    { "source": "/api/photos", "destination": "/api/photos" }
   ]
 }

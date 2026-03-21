@@ -30,6 +30,23 @@ function frame(inner, bg) {
   return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" rx="40" fill="${bg}"/>${inner}</svg>`;
 }
 
+function colorSwatchArt(bg, swatch) {
+  return frame(`
+    <defs>
+      <filter id="swatch-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="rgba(70, 50, 30, 0.14)"/>
+      </filter>
+      <linearGradient id="swatch-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.05"/>
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <rect x="48" y="48" width="104" height="104" rx="26" fill="${swatch}" filter="url(#swatch-shadow)"/>
+    <rect x="48" y="48" width="104" height="104" rx="26" fill="url(#swatch-glow)"/>
+    <rect x="48" y="48" width="104" height="104" rx="26" fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="2"/>
+  `, bg);
+}
+
 function countDots(count, fill) {
   const positions = [
     [62, 120], [100, 120], [138, 120],
@@ -302,9 +319,215 @@ const WORDS = [
   { key: "orange", word: "ORANGE", label: "orange", category: "colors",
     colors: ["#FFF3E0","#FFA726","#E65100"],
     art: frame(`<rect x="40" y="40" width="120" height="120" rx="30" fill="#FFA726"/><circle cx="80" cy="90" r="18" fill="#FB8C00" opacity="0.6"/><circle cx="120" cy="110" r="14" fill="#EF6C00" opacity="0.5"/><circle cx="100" cy="70" r="10" fill="#FFE0B2" opacity="0.7"/>`, "#FFF3E0") },
+  // ── New Animals ──
+  { key: "frog", word: "FROG", label: "frog", category: "animals", sound: "Ribbit!",
+    colors: ["#E8F5E9", "#66BB6A", "#2E7D32"],
+    art: frame(`<ellipse cx="100" cy="150" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><ellipse cx="100" cy="114" rx="42" ry="30" fill="#66BB6A"/><circle cx="76" cy="76" r="18" fill="#66BB6A"/><circle cx="124" cy="76" r="18" fill="#66BB6A"/><circle cx="76" cy="72" r="10" fill="#FFF"/><circle cx="124" cy="72" r="10" fill="#FFF"/><circle cx="78" cy="72" r="5" fill="#1B5E20"/><circle cx="126" cy="72" r="5" fill="#1B5E20"/><path d="M86 120 Q100 132 114 120" fill="none" stroke="#2E7D32" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="100" cy="108" rx="8" ry="4" fill="#A5D6A7"/>`, "#E8F5E9") },
+  { key: "lion", word: "LION", label: "lion", category: "animals", sound: "Roar!",
+    colors: ["#FFF8E1", "#FFB74D", "#E65100"],
+    art: frame(`<ellipse cx="100" cy="150" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><circle cx="100" cy="100" r="52" fill="#FFB74D"/><circle cx="100" cy="100" r="36" fill="#FFCC80"/><circle cx="86" cy="94" r="6" fill="#3E2723"/><circle cx="114" cy="94" r="6" fill="#3E2723"/><ellipse cx="100" cy="108" rx="10" ry="7" fill="#FFAB91"/><path d="M92 118 Q100 126 108 118" fill="none" stroke="#3E2723" stroke-width="3.5" stroke-linecap="round"/><path d="M92 108 L86 114 M108 108 L114 114" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>`, "#FFF8E1") },
+  { key: "sheep", word: "SHEEP", label: "sheep", category: "animals", sound: "Baa baa!",
+    colors: ["#F5F5F5", "#E0E0E0", "#795548"],
+    art: frame(`<ellipse cx="100" cy="150" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><circle cx="68" cy="100" r="22" fill="#FAFAFA"/><circle cx="132" cy="100" r="22" fill="#FAFAFA"/><circle cx="80" cy="80" r="22" fill="#FAFAFA"/><circle cx="120" cy="80" r="22" fill="#FAFAFA"/><circle cx="100" cy="90" r="26" fill="#FAFAFA"/><circle cx="100" cy="108" r="22" fill="#FAFAFA"/><circle cx="100" cy="66" r="20" fill="#795548"/><circle cx="90" cy="62" r="5" fill="#3E2723"/><circle cx="110" cy="62" r="5" fill="#3E2723"/><path d="M94 74 Q100 80 106 74" fill="none" stroke="#3E2723" stroke-width="3" stroke-linecap="round"/>`, "#F5F5F5") },
+  { key: "horse", word: "HORSE", label: "horse", category: "animals", sound: "Neigh!",
+    colors: ["#EFEBE9", "#A1887F", "#4E342E"],
+    art: frame(`<ellipse cx="100" cy="152" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><ellipse cx="100" cy="110" rx="38" ry="30" fill="#A1887F"/><ellipse cx="100" cy="72" rx="24" ry="30" fill="#A1887F"/><ellipse cx="100" cy="98" rx="14" ry="10" fill="#D7CCC8"/><circle cx="90" cy="64" r="5" fill="#3E2723"/><circle cx="110" cy="64" r="5" fill="#3E2723"/><circle cx="94" cy="86" r="3" fill="#4E342E"/><circle cx="106" cy="86" r="3" fill="#4E342E"/><path d="M86 42 Q80 22 76 28 Q72 34 82 44 M114 42 Q120 22 124 28 Q128 34 118 44" fill="#A1887F"/><path d="M86 42 Q92 28 100 42 Q108 28 114 42" fill="#6D4C41"/>`, "#EFEBE9") },
+  { key: "snake", word: "SNAKE", label: "snake", category: "animals", sound: "Hiss!",
+    colors: ["#E8F5E9", "#4CAF50", "#1B5E20"],
+    art: frame(`<path d="M50 140 Q50 100 80 100 Q110 100 110 70 Q110 40 140 40 Q160 40 160 60" fill="none" stroke="#4CAF50" stroke-width="18" stroke-linecap="round"/><circle cx="160" cy="56" r="14" fill="#4CAF50"/><circle cx="154" cy="52" r="4" fill="#1B5E20"/><circle cx="166" cy="52" r="4" fill="#1B5E20"/><path d="M156 66 L160 74 L164 66" fill="#EF5350"/><circle cx="80" cy="102" r="4" fill="#2E7D32" opacity="0.5"/><circle cx="110" cy="72" r="4" fill="#2E7D32" opacity="0.5"/><circle cx="50" cy="130" r="4" fill="#2E7D32" opacity="0.5"/>`, "#E8F5E9") },
+  { key: "turtle", word: "TURTLE", label: "turtle", category: "animals",
+    colors: ["#E8F5E9", "#66BB6A", "#33691E"],
+    art: frame(`<ellipse cx="100" cy="152" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><ellipse cx="100" cy="110" rx="48" ry="30" fill="#66BB6A"/><ellipse cx="100" cy="110" rx="42" ry="24" fill="#43A047"/><path d="M78 100 L78 120 L100 110 L122 100 L122 120 L100 110 Z" fill="#2E7D32" opacity="0.4"/><circle cx="100" cy="110" r="10" fill="#2E7D32" opacity="0.3"/><circle cx="140" cy="108" r="10" fill="#81C784"/><circle cx="60" cy="108" r="10" fill="#81C784"/><circle cx="144" cy="72" r="14" fill="#81C784"/><circle cx="148" cy="68" r="4" fill="#1B5E20"/><path d="M152 78 Q156 82 154 76" fill="none" stroke="#1B5E20" stroke-width="2" stroke-linecap="round"/>`, "#E8F5E9") },
+  { key: "whale", word: "WHALE", label: "whale", category: "animals", sound: "Wooo!",
+    colors: ["#E3F2FD", "#42A5F5", "#0D47A1"],
+    art: frame(`<ellipse cx="100" cy="106" rx="58" ry="36" fill="#42A5F5"/><circle cx="68" cy="98" r="6" fill="#0D47A1"/><circle cx="70" cy="96" r="2.5" fill="#FFF"/><path d="M78 118 Q100 130 122 118" fill="none" stroke="#0D47A1" stroke-width="3" stroke-linecap="round"/><path d="M156 100 L174 78 L174 122 Z" fill="#64B5F6"/><ellipse cx="100" cy="118" rx="28" ry="8" fill="#BBDEFB" opacity="0.5"/><path d="M92 64 Q96 42 100 56 Q104 42 108 64" fill="#90CAF9" stroke="#64B5F6" stroke-width="2"/>`, "#E3F2FD") },
+  { key: "owl", word: "OWL", label: "owl", category: "animals", sound: "Hoo hoo!",
+    colors: ["#EFEBE9", "#8D6E63", "#3E2723"],
+    art: frame(`<ellipse cx="100" cy="150" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><ellipse cx="100" cy="104" rx="40" ry="38" fill="#8D6E63"/><path d="M66 62 L80 80 L68 82" fill="#8D6E63"/><path d="M134 62 L120 80 L132 82" fill="#8D6E63"/><circle cx="82" cy="92" r="18" fill="#FFF"/><circle cx="118" cy="92" r="18" fill="#FFF"/><circle cx="82" cy="92" r="9" fill="#3E2723"/><circle cx="118" cy="92" r="9" fill="#3E2723"/><path d="M96 108 L100 116 L104 108" fill="#FF8F00"/><ellipse cx="100" cy="130" rx="22" ry="12" fill="#A1887F"/><path d="M82 126 L88 134 M94 124 L98 132 M106 124 L102 132 M112 126 L118 134" stroke="#6D4C41" stroke-width="2" stroke-linecap="round"/>`, "#EFEBE9") },
+  { key: "ant", word: "ANT", label: "ant", category: "animals",
+    colors: ["#FFEBEE", "#EF5350", "#B71C1C"],
+    art: frame(`<circle cx="100" cy="70" r="16" fill="#D32F2F"/><ellipse cx="100" cy="100" rx="14" ry="12" fill="#C62828"/><ellipse cx="100" cy="128" rx="18" ry="16" fill="#B71C1C"/><circle cx="94" cy="66" r="4" fill="#FFF"/><circle cx="106" cy="66" r="4" fill="#FFF"/><circle cx="94" cy="66" r="2" fill="#212121"/><circle cx="106" cy="66" r="2" fill="#212121"/><path d="M88 50 Q82 34 76 30 M112 50 Q118 34 124 30" stroke="#B71C1C" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M86 96 L62 80 M114 96 L138 80 M86 104 L60 112 M114 104 L140 112 M84 128 L64 146 M116 128 L136 146" stroke="#B71C1C" stroke-width="3" stroke-linecap="round" fill="none"/>`, "#FFEBEE") },
+  { key: "crab", word: "CRAB", label: "crab", category: "animals",
+    colors: ["#FFEBEE", "#EF5350", "#C62828"],
+    art: frame(`<ellipse cx="100" cy="110" rx="42" ry="28" fill="#EF5350"/><circle cx="78" cy="80" r="12" fill="#EF5350"/><circle cx="122" cy="80" r="12" fill="#EF5350"/><circle cx="78" cy="78" r="5" fill="#FFF"/><circle cx="122" cy="78" r="5" fill="#FFF"/><circle cx="78" cy="78" r="3" fill="#212121"/><circle cx="122" cy="78" r="3" fill="#212121"/><path d="M90 116 Q100 124 110 116" fill="none" stroke="#B71C1C" stroke-width="3" stroke-linecap="round"/><path d="M60 102 Q38 82 32 92 Q28 100 44 104" fill="none" stroke="#E53935" stroke-width="8" stroke-linecap="round"/><path d="M140 102 Q162 82 168 92 Q172 100 156 104" fill="none" stroke="#E53935" stroke-width="8" stroke-linecap="round"/><path d="M72 136 L66 150 M88 138 L86 152 M112 138 L114 152 M128 136 L134 150" stroke="#EF5350" stroke-width="4" stroke-linecap="round" fill="none"/>`, "#FFEBEE") },
+
+  // ── New Food ──
+  { key: "apple", word: "APPLE", label: "apple", category: "food", sound: "Crunch!",
+    colors: ["#FFEBEE", "#EF5350", "#B71C1C"],
+    art: frame(`<ellipse cx="100" cy="152" rx="40" ry="6" fill="rgba(0,0,0,0.05)"/><circle cx="92" cy="102" r="36" fill="#EF5350"/><circle cx="112" cy="102" r="36" fill="#E53935"/><path d="M100 64 Q98 44 106 38" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/><path d="M106 42 Q122 44 116 58" fill="#4CAF50"/><circle cx="80" cy="92" r="10" fill="#FFCDD2" opacity="0.5"/>`, "#FFEBEE") },
+  { key: "bread", word: "BREAD", label: "bread", category: "food", sound: "Munch!",
+    colors: ["#FFF8E1", "#FFCC80", "#E65100"],
+    art: frame(`<ellipse cx="100" cy="148" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><ellipse cx="100" cy="108" rx="54" ry="36" fill="#FFCC80"/><ellipse cx="100" cy="100" rx="50" ry="30" fill="#FFE0B2"/><path d="M56 100 Q66 80 84 82 Q100 78 116 82 Q134 80 144 100" fill="#D7A86E"/><circle cx="80" cy="108" r="4" fill="#C6903D" opacity="0.3"/><circle cx="110" cy="104" r="3" fill="#C6903D" opacity="0.3"/><circle cx="120" cy="116" r="3" fill="#C6903D" opacity="0.3"/>`, "#FFF8E1") },
+  { key: "corn", word: "CORN", label: "corn", category: "food",
+    colors: ["#FFF8E1", "#FFEE58", "#F9A825"],
+    art: frame(`<path d="M82 152 Q76 76 100 40 Q124 76 118 152 Z" fill="#FFEE58"/><path d="M84 150 Q86 82 100 50 Q114 82 116 150" fill="#FDD835"/><circle cx="92" cy="74" r="5" fill="#F9A825" opacity="0.6"/><circle cx="108" cy="74" r="5" fill="#F9A825" opacity="0.6"/><circle cx="92" cy="92" r="5" fill="#F9A825" opacity="0.6"/><circle cx="108" cy="92" r="5" fill="#F9A825" opacity="0.6"/><circle cx="92" cy="110" r="5" fill="#F9A825" opacity="0.6"/><circle cx="108" cy="110" r="5" fill="#F9A825" opacity="0.6"/><circle cx="100" cy="128" r="5" fill="#F9A825" opacity="0.6"/><path d="M100 38 Q110 28 120 32 Q108 36 106 48" fill="#66BB6A"/><path d="M100 38 Q90 28 80 32 Q92 36 94 48" fill="#43A047"/>`, "#FFF8E1") },
+  { key: "grape", word: "GRAPE", label: "grape", category: "food", sound: "Yum!",
+    colors: ["#F3E5F5", "#AB47BC", "#6A1B9A"],
+    art: frame(`<circle cx="84" cy="80" r="14" fill="#AB47BC"/><circle cx="116" cy="80" r="14" fill="#AB47BC"/><circle cx="100" cy="76" r="14" fill="#CE93D8"/><circle cx="76" cy="102" r="14" fill="#9C27B0"/><circle cx="124" cy="102" r="14" fill="#9C27B0"/><circle cx="100" cy="98" r="14" fill="#AB47BC"/><circle cx="88" cy="122" r="14" fill="#8E24AA"/><circle cx="112" cy="122" r="14" fill="#8E24AA"/><circle cx="100" cy="140" r="14" fill="#7B1FA2"/><path d="M100 66 Q100 48 108 38" fill="none" stroke="#5D4037" stroke-width="3" stroke-linecap="round"/><path d="M108 40 Q118 38 114 50" fill="#66BB6A"/>`, "#F3E5F5") },
+  { key: "rice", word: "RICE", label: "rice", category: "food",
+    colors: ["#FFF8E1", "#FFECB3", "#FF8F00"],
+    art: frame(`<path d="M52 86 Q52 58 100 58 Q148 58 148 86 L138 150 H62 Z" fill="#FFECB3"/><ellipse cx="100" cy="86" rx="46" ry="8" fill="#FFF8E1"/><ellipse cx="80" cy="100" rx="6" ry="3" fill="#FFFDE7" transform="rotate(-20,80,100)"/><ellipse cx="100" cy="96" rx="6" ry="3" fill="#FFFDE7" transform="rotate(10,100,96)"/><ellipse cx="118" cy="100" rx="6" ry="3" fill="#FFFDE7" transform="rotate(15,118,100)"/><ellipse cx="88" cy="112" rx="6" ry="3" fill="#FFFDE7" transform="rotate(-10,88,112)"/><ellipse cx="110" cy="110" rx="6" ry="3" fill="#FFFDE7" transform="rotate(20,110,110)"/><ellipse cx="96" cy="122" rx="6" ry="3" fill="#FFFDE7"/>`, "#FFF8E1") },
+  { key: "soup", word: "SOUP", label: "soup", category: "food", sound: "Slurp!",
+    colors: ["#FFF3E0", "#FF8A65", "#BF360C"],
+    art: frame(`<ellipse cx="100" cy="148" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><path d="M42 88 Q42 60 100 60 Q158 60 158 88 L148 138 H52 Z" fill="#FF8A65"/><ellipse cx="100" cy="88" rx="56" ry="12" fill="#FFAB91"/><path d="M68 82 Q76 70 86 78" fill="none" stroke="#FFF" stroke-width="4" stroke-linecap="round" opacity="0.4"/><path d="M82 52 Q86 36 90 44" fill="none" stroke="#BDBDBD" stroke-width="3" stroke-linecap="round" opacity="0.5"/><path d="M100 50 Q104 32 108 42" fill="none" stroke="#BDBDBD" stroke-width="3" stroke-linecap="round" opacity="0.5"/><path d="M118 52 Q122 36 126 44" fill="none" stroke="#BDBDBD" stroke-width="3" stroke-linecap="round" opacity="0.5"/>`, "#FFF3E0") },
+  { key: "pizza", word: "PIZZA", label: "pizza", category: "food", sound: "Yummy!",
+    colors: ["#FFF8E1", "#FFB74D", "#E65100"],
+    art: frame(`<path d="M100 40 L160 154 H40 Z" fill="#FFB74D"/><path d="M100 54 L150 148 H50 Z" fill="#FFCC80"/><circle cx="96" cy="100" r="10" fill="#EF5350" opacity="0.8"/><circle cx="118" cy="130" r="8" fill="#EF5350" opacity="0.8"/><circle cx="80" cy="130" r="9" fill="#EF5350" opacity="0.8"/><circle cx="104" cy="120" r="4" fill="#33691E" opacity="0.6"/><circle cx="88" cy="110" r="3" fill="#33691E" opacity="0.6"/><circle cx="114" cy="108" r="4" fill="#33691E" opacity="0.6"/>`, "#FFF8E1") },
+  { key: "candy", word: "CANDY", label: "candy", category: "food", sound: "Mmm!",
+    colors: ["#FCE4EC", "#F48FB1", "#C2185B"],
+    art: frame(`<circle cx="100" cy="100" r="32" fill="#F48FB1"/><path d="M68 100 Q48 80 42 96 Q36 114 56 108" fill="#F48FB1"/><path d="M132 100 Q152 80 158 96 Q164 114 144 108" fill="#F48FB1"/><path d="M48 88 L58 108" stroke="#E91E63" stroke-width="3" stroke-linecap="round" opacity="0.5"/><path d="M152 88 L142 108" stroke="#E91E63" stroke-width="3" stroke-linecap="round" opacity="0.5"/><path d="M78 80 Q90 76 86 92" fill="none" stroke="#FFCDD2" stroke-width="6" stroke-linecap="round" opacity="0.5"/><path d="M76 108 Q82 120 96 118" fill="none" stroke="#C2185B" stroke-width="4" stroke-linecap="round" opacity="0.4"/><path d="M110 84 Q124 88 120 104" fill="none" stroke="#C2185B" stroke-width="4" stroke-linecap="round" opacity="0.4"/>`, "#FCE4EC") },
+  { key: "peach", word: "PEACH", label: "peach", category: "food", sound: "Yum!",
+    colors: ["#FFF3E0", "#FFAB91", "#E65100"],
+    art: frame(`<ellipse cx="100" cy="150" rx="40" ry="6" fill="rgba(0,0,0,0.05)"/><circle cx="94" cy="100" r="36" fill="#FFAB91"/><circle cx="110" cy="100" r="36" fill="#FF8A65"/><path d="M100 62 Q98 44 104 36" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/><path d="M104 40 Q116 38 112 52" fill="#66BB6A"/><circle cx="82" cy="90" r="10" fill="#FFCC80" opacity="0.4"/><path d="M100 66 V100" fill="none" stroke="#E65100" stroke-width="2" opacity="0.3"/>`, "#FFF3E0") },
+  { key: "plum", word: "PLUM", label: "plum", category: "food", sound: "Yum!",
+    colors: ["#F3E5F5", "#7B1FA2", "#4A148C"],
+    art: frame(`<ellipse cx="100" cy="150" rx="40" ry="6" fill="rgba(0,0,0,0.05)"/><circle cx="100" cy="102" r="40" fill="#7B1FA2"/><circle cx="88" cy="88" r="12" fill="#9C27B0" opacity="0.5"/><path d="M100 60 Q98 44 106 36" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round"/><path d="M106 40 Q118 38 112 52" fill="#66BB6A"/><path d="M100 64 V82" fill="none" stroke="#4A148C" stroke-width="2" opacity="0.5"/>`, "#F3E5F5") },
+
+  // ── New Nature ──
+  { key: "cloud", word: "CLOUD", label: "cloud", category: "nature",
+    colors: ["#E3F2FD", "#90CAF9", "#1565C0"],
+    art: frame(`<ellipse cx="100" cy="112" rx="56" ry="28" fill="#FFF"/><circle cx="64" cy="108" r="28" fill="#FFF"/><circle cx="136" cy="108" r="28" fill="#FFF"/><circle cx="82" cy="86" r="26" fill="#FFF"/><circle cx="118" cy="86" r="26" fill="#FFF"/><circle cx="100" cy="80" r="28" fill="#FFF"/><ellipse cx="100" cy="112" rx="52" ry="24" fill="#F5F5F5" opacity="0.5"/>`, "#E3F2FD") },
+  { key: "snow", word: "SNOW", label: "snow", category: "nature",
+    colors: ["#E3F2FD", "#BBDEFB", "#1565C0"],
+    art: frame(`<path d="M100 30 V170 M44 66 L156 134 M44 134 L156 66" stroke="#90CAF9" stroke-width="4"/><circle cx="100" cy="100" r="12" fill="#E3F2FD" stroke="#90CAF9" stroke-width="3"/><circle cx="100" cy="42" r="6" fill="#BBDEFB"/><circle cx="100" cy="158" r="6" fill="#BBDEFB"/><circle cx="50" cy="70" r="6" fill="#BBDEFB"/><circle cx="150" cy="70" r="6" fill="#BBDEFB"/><circle cx="50" cy="130" r="6" fill="#BBDEFB"/><circle cx="150" cy="130" r="6" fill="#BBDEFB"/><path d="M92 58 L100 42 L108 58 M92 142 L100 158 L108 142" stroke="#90CAF9" stroke-width="3" fill="none" stroke-linecap="round"/>`, "#E3F2FD") },
+  { key: "rock", word: "ROCK", label: "rock", category: "nature",
+    colors: ["#ECEFF1", "#90A4AE", "#37474F"],
+    art: frame(`<ellipse cx="100" cy="150" rx="58" ry="8" fill="rgba(0,0,0,0.06)"/><ellipse cx="100" cy="114" rx="52" ry="34" fill="#90A4AE"/><ellipse cx="86" cy="106" rx="20" ry="14" fill="#B0BEC5" opacity="0.5"/><path d="M60 118 Q80 100 120 108" fill="none" stroke="#78909C" stroke-width="3" stroke-linecap="round" opacity="0.4"/><path d="M72 130 Q100 122 140 128" fill="none" stroke="#607D8B" stroke-width="2" stroke-linecap="round" opacity="0.3"/>`, "#ECEFF1") },
+  { key: "hill", word: "HILL", label: "hill", category: "nature",
+    colors: ["#E8F5E9", "#81C784", "#2E7D32"],
+    art: frame(`<path d="M20 160 Q100 40 180 160 Z" fill="#81C784"/><path d="M20 160 Q80 70 140 160" fill="#66BB6A" opacity="0.5"/><circle cx="120" cy="50" r="16" fill="#FFD54F"/><circle cx="70" cy="118" r="4" fill="#4CAF50" opacity="0.4"/><circle cx="100" cy="108" r="3" fill="#4CAF50" opacity="0.4"/><circle cx="130" cy="120" r="4" fill="#4CAF50" opacity="0.4"/><path d="M86 126 Q88 112 92 126" fill="#2E7D32" opacity="0.6"/><path d="M112 118 Q114 104 118 118" fill="#2E7D32" opacity="0.6"/>`, "#E8F5E9") },
+  { key: "pond", word: "POND", label: "pond", category: "nature",
+    colors: ["#E3F2FD", "#64B5F6", "#1565C0"],
+    art: frame(`<ellipse cx="100" cy="110" rx="60" ry="36" fill="#64B5F6"/><ellipse cx="100" cy="106" rx="54" ry="30" fill="#90CAF9" opacity="0.5"/><ellipse cx="80" cy="104" rx="8" ry="4" fill="#BBDEFB" opacity="0.6"/><ellipse cx="120" cy="116" rx="10" ry="5" fill="#BBDEFB" opacity="0.5"/><path d="M46 80 Q50 60 56 80" fill="#4CAF50"/><path d="M38 82 Q46 58 54 82" fill="#66BB6A"/><path d="M142 78 Q148 58 154 78" fill="#4CAF50"/><circle cx="106" cy="98" r="3" fill="#FFF" opacity="0.5"/>`, "#E3F2FD") },
+  { key: "rose", word: "ROSE", label: "rose", category: "nature",
+    colors: ["#FCE4EC", "#EF5350", "#C62828"],
+    art: frame(`<rect x="96" y="100" width="8" height="60" rx="4" fill="#4CAF50"/><path d="M100 158 Q84 140 70 130" fill="none" stroke="#66BB6A" stroke-width="4" stroke-linecap="round"/><path d="M78 130 Q72 136 80 138" fill="#66BB6A"/><circle cx="100" cy="82" r="24" fill="#EF5350"/><circle cx="100" cy="72" r="18" fill="#E53935"/><circle cx="90" cy="78" r="14" fill="#F44336"/><circle cx="110" cy="78" r="14" fill="#F44336"/><circle cx="100" cy="88" r="12" fill="#C62828"/><circle cx="100" cy="80" r="8" fill="#B71C1C"/>`, "#FCE4EC") },
+  { key: "wind", word: "WIND", label: "wind", category: "nature",
+    colors: ["#E3F2FD", "#90CAF9", "#1565C0"],
+    art: frame(`<path d="M40 80 Q100 64 140 80 Q160 88 150 72" fill="none" stroke="#90CAF9" stroke-width="8" stroke-linecap="round"/><path d="M48 108 Q108 92 148 108 Q162 114 154 100" fill="none" stroke="#64B5F6" stroke-width="6" stroke-linecap="round"/><path d="M56 134 Q108 120 140 134 Q152 138 146 126" fill="none" stroke="#BBDEFB" stroke-width="5" stroke-linecap="round"/><circle cx="150" cy="70" r="4" fill="#90CAF9"/><circle cx="154" cy="98" r="3" fill="#64B5F6"/><circle cx="146" cy="124" r="3" fill="#BBDEFB"/>`, "#E3F2FD") },
+  { key: "fire", word: "FIRE", label: "fire", category: "nature",
+    colors: ["#FFF3E0", "#FF7043", "#E65100"],
+    art: frame(`<path d="M60 160 Q60 100 80 80 Q72 120 100 60 Q100 100 120 80 Q140 100 140 160 Z" fill="#FF7043"/><path d="M72 160 Q72 116 92 96 Q86 130 100 80 Q108 120 116 96 Q132 116 132 160 Z" fill="#FFA726"/><path d="M86 160 Q86 130 100 108 Q114 130 114 160 Z" fill="#FFCA28"/><ellipse cx="100" cy="158" rx="44" ry="8" fill="#E65100" opacity="0.3"/>`, "#FFF3E0") },
+
+  // ── New Things ──
+  { key: "boat", word: "BOAT", label: "boat", category: "things",
+    colors: ["#E3F2FD", "#42A5F5", "#1565C0"],
+    art: frame(`<path d="M30 120 L50 156 H150 L170 120 Z" fill="#42A5F5"/><rect x="96" y="58" width="8" height="62" rx="4" fill="#795548"/><path d="M104 62 L140 100 L104 100 Z" fill="#FFF"/><path d="M96 66 L60 100 L96 100 Z" fill="#FFCDD2"/><path d="M30 130 Q60 118 90 130 Q120 142 150 130 Q165 124 170 128" fill="none" stroke="#90CAF9" stroke-width="4" stroke-linecap="round" opacity="0.4"/>`, "#E3F2FD") },
+  { key: "drum", word: "DRUM", label: "drum", category: "things", sound: "Boom boom!",
+    colors: ["#FFF3E0", "#FF8A65", "#BF360C"],
+    art: frame(`<ellipse cx="100" cy="136" rx="48" ry="14" fill="#E64A19"/><rect x="52" y="72" width="96" height="64" rx="4" fill="#FF8A65"/><ellipse cx="100" cy="72" rx="48" ry="14" fill="#FFAB91"/><path d="M56 80 L56 132 M144 80 L144 132" stroke="#BF360C" stroke-width="3"/><path d="M62 78 L82 132 M138 78 L118 132 M78 78 L98 132 M122 78 L102 132" stroke="#FFE0B2" stroke-width="2" opacity="0.5"/><path d="M68 52 L92 72 M132 52 L108 72" stroke="#795548" stroke-width="4" stroke-linecap="round"/><circle cx="68" cy="50" r="6" fill="#795548"/><circle cx="132" cy="50" r="6" fill="#795548"/>`, "#FFF3E0") },
+  { key: "lamp", word: "LAMP", label: "lamp", category: "things",
+    colors: ["#FFF8E1", "#FFD54F", "#FF8F00"],
+    art: frame(`<path d="M68 48 L60 120 H140 L132 48 Z" fill="#FFD54F"/><ellipse cx="100" cy="48" rx="34" ry="8" fill="#FFC107"/><rect x="88" y="120" width="24" height="16" rx="4" fill="#795548"/><ellipse cx="100" cy="140" rx="28" ry="6" fill="#8D6E63"/><path d="M86 80 Q100 60 114 80" fill="none" stroke="#FFF" stroke-width="4" stroke-linecap="round" opacity="0.5"/><circle cx="100" cy="42" r="4" fill="#FFF9C4"/>`, "#FFF8E1") },
+  { key: "bell", word: "BELL", label: "bell", category: "things", sound: "Ding dong!",
+    colors: ["#FFF8E1", "#FFD54F", "#F57F17"],
+    art: frame(`<path d="M62 120 Q62 56 100 48 Q138 56 138 120 Z" fill="#FFD54F"/><path d="M52 120 H148" stroke="#FFC107" stroke-width="8" stroke-linecap="round"/><circle cx="100" cy="134" r="10" fill="#F57F17"/><circle cx="100" cy="44" r="6" fill="#F57F17"/><path d="M82 80 Q100 64 118 80" fill="none" stroke="#FFF" stroke-width="4" stroke-linecap="round" opacity="0.4"/>`, "#FFF8E1") },
+  { key: "door", word: "DOOR", label: "door", category: "things",
+    colors: ["#EFEBE9", "#8D6E63", "#4E342E"],
+    art: frame(`<rect x="54" y="38" width="92" height="126" rx="6" fill="#8D6E63"/><rect x="62" y="46" width="76" height="110" rx="4" fill="#A1887F"/><rect x="68" y="52" width="30" height="44" rx="4" fill="#6D4C41"/><rect x="102" y="52" width="30" height="44" rx="4" fill="#6D4C41"/><rect x="68" y="102" width="30" height="44" rx="4" fill="#6D4C41"/><rect x="102" y="102" width="30" height="44" rx="4" fill="#6D4C41"/><circle cx="136" cy="106" r="6" fill="#FFD54F"/>`, "#EFEBE9") },
+  { key: "ring", word: "RING", label: "ring", category: "things",
+    colors: ["#FFF8E1", "#FFD54F", "#FF8F00"],
+    art: frame(`<circle cx="100" cy="110" r="38" fill="none" stroke="#FFD54F" stroke-width="16"/><circle cx="100" cy="110" r="38" fill="none" stroke="#FFC107" stroke-width="10"/><circle cx="100" cy="72" r="14" fill="#64B5F6"/><circle cx="100" cy="72" r="8" fill="#90CAF9"/><circle cx="96" cy="68" r="3" fill="#FFF" opacity="0.6"/><path d="M86 72 L82 64 M114 72 L118 64" stroke="#FFD54F" stroke-width="3" stroke-linecap="round"/>`, "#FFF8E1") },
+  { key: "shoe", word: "SHOE", label: "shoe", category: "things",
+    colors: ["#E3F2FD", "#42A5F5", "#1565C0"],
+    art: frame(`<ellipse cx="100" cy="148" rx="58" ry="8" fill="rgba(0,0,0,0.05)"/><path d="M46 108 L46 88 Q46 68 66 68 L108 68 Q118 68 122 78 L158 108 Q164 114 158 122 L46 122 Z" fill="#42A5F5"/><path d="M46 120 H160 V136 H46 Z" fill="#1E88E5" rx="4"/><rect x="46" y="130" width="114" height="10" rx="5" fill="#1565C0"/><path d="M66 68 L66 88 M86 68 L86 88" stroke="#64B5F6" stroke-width="3" stroke-linecap="round" opacity="0.5"/><circle cx="74" cy="78" r="3" fill="#FFF" opacity="0.4"/>`, "#E3F2FD") },
+  { key: "sock", word: "SOCK", label: "sock", category: "things",
+    colors: ["#FCE4EC", "#F48FB1", "#C2185B"],
+    art: frame(`<path d="M72 30 L72 114 Q72 146 100 146 Q128 146 128 120 L128 114 L108 114 L108 120 Q108 128 100 128 Q90 128 90 114 L90 30 Z" fill="#F48FB1"/><rect x="72" y="30" width="18" height="10" rx="3" fill="#E91E63"/><rect x="72" y="42" width="18" height="4" rx="2" fill="#FFCDD2" opacity="0.5"/><rect x="72" y="50" width="18" height="4" rx="2" fill="#FFCDD2" opacity="0.5"/><path d="M72 76 H90 M72 86 H90" stroke="#C2185B" stroke-width="3" opacity="0.3"/>`, "#FCE4EC") },
+  { key: "rope", word: "ROPE", label: "rope", category: "things",
+    colors: ["#EFEBE9", "#A1887F", "#5D4037"],
+    art: frame(`<path d="M40 40 Q70 60 60 100 Q50 140 80 160 Q110 180 140 140 Q160 110 140 80 Q120 50 160 40" fill="none" stroke="#A1887F" stroke-width="12" stroke-linecap="round"/><path d="M40 40 Q70 60 60 100 Q50 140 80 160 Q110 180 140 140 Q160 110 140 80 Q120 50 160 40" fill="none" stroke="#8D6E63" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 12"/>`, "#EFEBE9") },
+  { key: "flag", word: "FLAG", label: "flag", category: "things",
+    colors: ["#FFEBEE", "#EF5350", "#B71C1C"],
+    art: frame(`<rect x="52" y="32" width="6" height="140" rx="3" fill="#795548"/><rect x="58" y="38" width="90" height="56" rx="6" fill="#EF5350"/><rect x="58" y="38" width="90" height="19" rx="4" fill="#E53935"/><rect x="58" y="75" width="90" height="19" rx="4" fill="#C62828"/><circle cx="92" cy="66" r="10" fill="#FFF" opacity="0.3"/><circle cx="52" cy="172" r="6" fill="#5D4037"/>`, "#FFEBEE") },
+
+  // ── New Body ──
+  { key: "head", word: "HEAD", label: "head", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<circle cx="100" cy="90" r="48" fill="#FFCC80"/><circle cx="80" cy="82" r="6" fill="#5D4037"/><circle cx="120" cy="82" r="6" fill="#5D4037"/><path d="M88 106 Q100 116 112 106" fill="none" stroke="#5D4037" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="100" cy="96" rx="6" ry="4" fill="#FFB74D"/><path d="M54 68 Q60 36 100 30 Q140 36 146 68" fill="none" stroke="#8D6E63" stroke-width="8" stroke-linecap="round"/>`, "#FFF3E0") },
+  { key: "face", word: "FACE", label: "face", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<circle cx="100" cy="100" r="52" fill="#FFCC80"/><circle cx="78" cy="88" r="8" fill="#FFF"/><circle cx="122" cy="88" r="8" fill="#FFF"/><circle cx="80" cy="88" r="5" fill="#5D4037"/><circle cx="124" cy="88" r="5" fill="#5D4037"/><ellipse cx="100" cy="100" rx="6" ry="5" fill="#FFB74D"/><path d="M82 120 Q100 136 118 120" fill="none" stroke="#E65100" stroke-width="4" stroke-linecap="round"/><circle cx="68" cy="108" r="8" fill="#FFAB91" opacity="0.4"/><circle cx="132" cy="108" r="8" fill="#FFAB91" opacity="0.4"/>`, "#FFF3E0") },
+  { key: "arm", word: "ARM", label: "arm", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<path d="M60 46 Q56 100 70 140 Q78 160 100 160" fill="none" stroke="#FFCC80" stroke-width="28" stroke-linecap="round"/><circle cx="60" cy="46" r="16" fill="#FFB74D"/><path d="M92 152 L80 168 M100 160 L96 178 M108 158 L110 176 M116 154 L122 170 M86 156 L78 172" stroke="#FFCC80" stroke-width="6" stroke-linecap="round"/>`, "#FFF3E0") },
+  { key: "lip", word: "LIP", label: "lip", category: "body",
+    colors: ["#FCE4EC", "#EF5350", "#C62828"],
+    art: frame(`<path d="M42 100 Q70 72 100 80 Q130 72 158 100" fill="#EF5350"/><path d="M42 100 Q70 136 100 124 Q130 136 158 100" fill="#E53935"/><path d="M42 100 Q70 80 100 88 Q130 80 158 100" fill="#F44336" opacity="0.5"/><path d="M62 100 Q80 92 100 96 Q120 92 138 100" fill="none" stroke="#FFCDD2" stroke-width="3" stroke-linecap="round" opacity="0.4"/>`, "#FCE4EC") },
+  { key: "chin", word: "CHIN", label: "chin", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<path d="M48 40 H152 V100 Q152 164 100 164 Q48 164 48 100 Z" fill="#FFCC80"/><path d="M72 78 Q100 94 128 78" fill="none" stroke="#FFB74D" stroke-width="4" stroke-linecap="round"/><ellipse cx="100" cy="140" rx="22" ry="10" fill="#FFE0B2" opacity="0.5"/><rect x="48" y="36" width="104" height="12" rx="4" fill="#FFB74D" opacity="0.4"/>`, "#FFF3E0") },
+  { key: "neck", word: "NECK", label: "neck", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<circle cx="100" cy="64" r="30" fill="#FFCC80"/><rect x="80" y="90" width="40" height="60" rx="10" fill="#FFCC80"/><circle cx="90" cy="58" r="4" fill="#5D4037"/><circle cx="110" cy="58" r="4" fill="#5D4037"/><path d="M94 72 Q100 78 106 72" fill="none" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/><path d="M54 148 Q64 132 80 140 L80 150 H120 L120 140 Q136 132 146 148" fill="#64B5F6"/>`, "#FFF3E0") },
+  { key: "knee", word: "KNEE", label: "knee", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<rect x="72" y="28" width="56" height="60" rx="22" fill="#FFCC80"/><circle cx="100" cy="106" r="32" fill="#FFCC80"/><rect x="72" y="126" width="56" height="48" rx="22" fill="#FFCC80"/><circle cx="100" cy="106" r="18" fill="#FFE0B2" opacity="0.4"/><path d="M78 106 Q100 88 122 106" fill="none" stroke="#FFB74D" stroke-width="3" stroke-linecap="round" opacity="0.5"/>`, "#FFF3E0") },
+  { key: "back", word: "BACK", label: "back", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<circle cx="100" cy="46" r="22" fill="#FFCC80"/><path d="M74 62 Q66 92 68 160 L132 160 Q134 92 126 62" fill="#FFCC80"/><path d="M86 78 V140 M100 78 V148 M114 78 V140" stroke="#FFB74D" stroke-width="3" stroke-linecap="round" opacity="0.3"/><path d="M78 90 Q100 96 122 90" fill="none" stroke="#FFE0B2" stroke-width="4" stroke-linecap="round" opacity="0.4"/><path d="M76 120 Q100 126 124 120" fill="none" stroke="#FFE0B2" stroke-width="4" stroke-linecap="round" opacity="0.4"/>`, "#FFF3E0") },
+
+  // ── New Colors ──
+  { key: "gold", word: "GOLD", label: "gold", category: "colors",
+    colors: ["#FFF8E1", "#FFD54F", "#FF8F00"],
+    art: frame(`<polygon points="100,28 118,76 170,80 130,114 142,166 100,140 58,166 70,114 30,80 82,76" fill="#FFD54F"/><polygon points="100,48 112,80 148,84 120,108 128,144 100,126 72,144 80,108 52,84 88,80" fill="#FFC107" opacity="0.5"/><circle cx="92" cy="92" r="6" fill="#FFF8E1" opacity="0.4"/>`, "#FFF8E1") },
+  { key: "white", word: "WHITE", label: "white", category: "colors",
+    colors: ["#F5F5F5", "#FFFFFF", "#BDBDBD"],
+    art: frame(`<circle cx="100" cy="100" r="54" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="3"/><circle cx="100" cy="100" r="38" fill="#FAFAFA" opacity="0.8"/><circle cx="100" cy="100" r="22" fill="#FFF" opacity="0.6"/><circle cx="82" cy="82" r="14" fill="#FFF" opacity="0.7"/><circle cx="80" cy="80" r="6" fill="#F5F5F5" opacity="0.5"/>`, "#F5F5F5") },
+  { key: "black", word: "BLACK", label: "black", category: "colors",
+    colors: ["#ECEFF1", "#424242", "#212121"],
+    art: frame(`<circle cx="100" cy="100" r="54" fill="#424242"/><circle cx="100" cy="100" r="38" fill="#616161" opacity="0.4"/><circle cx="100" cy="100" r="22" fill="#757575" opacity="0.3"/><circle cx="82" cy="80" r="14" fill="#9E9E9E" opacity="0.2"/><circle cx="116" cy="118" r="10" fill="#757575" opacity="0.15"/>`, "#ECEFF1") },
+
 ];
 
+WORDS.forEach((entry) => {
+  if (entry.category !== "colors") return;
+  const bg = entry.colors?.[0] || "#F5F5F5";
+  const swatch = entry.colors?.[1] || entry.colors?.[0] || "#FFFFFF";
+  entry.art = colorSwatchArt(bg, swatch);
+});
+
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const REAL_PHOTOS_STORAGE_KEY = "din-english-garden-real-photos-v3";
+const VIEW_MODE_STORAGE_KEY = "din-english-garden-view-v2";
+const PHOTO_CATEGORY_CONFIG = {
+  animals: { enabled: true, hint: "single animal portrait outdoors bright friendly" },
+  food: { enabled: true, hint: "single food item close up bright simple background" },
+  nature: { enabled: true, hint: "clear nature scene bright daylight" },
+  things: { enabled: true, hint: "single object isolated clean simple background" },
+  body: { enabled: false, hint: "" },
+  colors: { enabled: false, hint: "" },
+  numbers: { enabled: false, hint: "" },
+};
+const PHOTO_QUERY_OVERRIDES = {
+  jam: "jar of fruit jam",
+  pie: "slice of pie dessert",
+  ice: "ice cream cone dessert",
+  cup: "drinking cup object",
+  key: "metal house key object",
+  bag: "school backpack bag",
+  book: "single book cover object",
+  bell: "hand bell object",
+  ring: "single ring jewelry",
+  flag: "single flag on pole",
+  bug: "ladybug insect macro",
+  sea: "ocean sea waves",
+  moon: "moon in night sky",
+  star: "bright star in night sky",
+  sun: "bright sun in sky",
+};
+const CURATED_EMOJI_MAP = {
+  dog: "🐶", cat: "🐱", fish: "🐟", bird: "🐦", duck: "🦆", cow: "🐮", pig: "🐷", bee: "🐝", bear: "🐻", hen: "🐔",
+  bug: "🐛", fox: "🦊", frog: "🐸", lion: "🦁", sheep: "🐑", horse: "🐴", snake: "🐍", turtle: "🐢", whale: "🐳", owl: "🦉",
+  ant: "🐜", crab: "🦀", rabbit: "🐰", monkey: "🐵", elephant: "🐘",
+  egg: "🥚", milk: "🥛", cake: "🎂", pie: "🥧", jam: "🍓", ice: "🍦", cup: "☕", apple: "🍎", bread: "🍞", corn: "🌽",
+  grape: "🍇", rice: "🍚", soup: "🍲", pizza: "🍕", candy: "🍬", peach: "🍑", plum: "🟣", banana: "🍌", cookie: "🍪", orange: "🍊",
+  sun: "☀️", moon: "🌙", star: "⭐", tree: "🌳", rain: "🌧️", leaf: "🍃", sea: "🌊", cloud: "☁️", snow: "❄️", rock: "🪨",
+  hill: "⛰️", pond: "💧", rose: "🌹", wind: "💨", fire: "🔥", rainbow: "🌈", flower: "🌼",
+  ball: "⚽", car: "🚗", bus: "🚌", toy: "🧸", hat: "🧢", bed: "🛏️", box: "📦", key: "🔑", bag: "🎒", book: "📘",
+  boat: "⛵", drum: "🥁", lamp: "💡", bell: "🔔", door: "🚪", ring: "💍", shoe: "👟", sock: "🧦", rope: "🪢", flag: "🚩",
+  rocket: "🚀", eye: "👁️", ear: "👂", nose: "👃", hand: "✋", leg: "🦵", finger: "☝️", lip: "👄",
+};
 
 // === STATE ===
 
@@ -360,11 +583,17 @@ const state = {
   speechRate: loadFromStorage("din-english-garden-speed", 75) / 100,
   autoAdvance: loadFromStorage("din-english-garden-auto", true),
   useLowercaseText: loadFromStorage("din-english-garden-lowercase", false),
+  useRealPhotos: loadFromStorage(REAL_PHOTOS_STORAGE_KEY, false),
   currentAudio: null,
   currentAudioUrl: null,
   speechAbortController: null,
   spellTimer: null,
   speechSequenceId: 0,
+  spellingFocusIndex: -1,
+  photoRequestId: 0,
+  photoApiAvailable: true,
+  photoCache: {},
+  gridEntries: [],
   toastTimer: null,
   celebrationTimer: null,
   completionSpeechTimer: null,
@@ -396,14 +625,15 @@ const el = {};
 
 function cacheElements() {
   const ids = [
+    "homeScreen", "gameScreen", "backBtn",
     "categories", "settingsBtn", "viewToggle", "caseToggleBtn", "prevBtn", "nextBtn",
-    "wordDisplay", "artContainer", "wordTitle", "wordFacts", "hearBtn", "spellBtn", "countBtn",
+    "wordDisplay", "artContainer", "wordTitle", "wordFacts",
     "gridView", "wordGrid", "stageView",
     "slots", "tiles", "dots",
     "gameModes", "gameArea", "spellGame", "patternGame", "memoryGame", "sortGame",
     "patternSequence", "patternOptions", "memoryBoard", "sortItem", "sortBuckets",
     "settingsOverlay", "speedSlider", "speedLabel",
-    "voiceSelect", "autoAdvance", "autoAdvanceSetting", "resetProgress", "closeSettings",
+    "voiceSelect", "autoAdvance", "autoAdvanceSetting", "photoMode", "photoModeSetting", "resetProgress", "closeSettings",
     "celebrationOverlay", "celebrationStar", "celebrationWord", "celebrationPhrase",
     "mascot", "mascotBubble",
     "toast",
@@ -419,31 +649,52 @@ function cacheElements() {
 function init() {
   cacheElements();
   filterWords();
+  refreshGridOrder();
   updateAccentColor();
   updateCaseToggleButton();
   bindEvents();
   initVoice();
   // Set view mode BEFORE rendering so GSAP knows whether to animate
-  state.viewMode = loadFromStorage("din-english-garden-view", "grid");
-  state.gameMode = loadFromStorage("din-english-garden-gamemode", "spell");
+  state.viewMode = loadFromStorage(VIEW_MODE_STORAGE_KEY, "card");
+  state.gameMode = "spell";
+  saveToStorage("din-english-garden-gamemode", state.gameMode);
   setCurrentWord(0);
   renderCategories();
-  renderGameModes();
   renderDots();
-  applyViewMode();
   applyGameMode();
-  // Welcome animation
-  animateEntrance();
-  state.welcomeTimer = setTimeout(() => showMascotBubble(randomPhrase("welcome")), 800);
+  applyViewMode();
+  el.homeScreen.hidden = true;
+  el.gameScreen.hidden = false;
+  if (el.backBtn) el.backBtn.hidden = true;
+  if (el.gameModes) el.gameModes.hidden = true;
 }
 
 // === EVENTS ===
 
 function bindEvents() {
+  // Home screen navigation
+  document.querySelectorAll("[data-home]").forEach((card) => {
+    card.addEventListener("click", () => {
+      const target = card.dataset.home;
+      if (target === "settings") {
+        openSettings();
+        return;
+      }
+      if (target === "browse") {
+        state.viewMode = "grid";
+        saveToStorage(VIEW_MODE_STORAGE_KEY, "grid");
+        enterGame("spell");
+        applyViewMode();
+        return;
+      }
+      enterGame(target);
+    });
+  });
+  if (el.backBtn) {
+    el.backBtn.addEventListener("click", goHome);
+  }
+
   el.artContainer.addEventListener("click", () => speakCurrentWord());
-  el.hearBtn.addEventListener("click", speakWordOnly);
-  el.spellBtn.addEventListener("click", speakCurrentWord);
-  el.countBtn.addEventListener("click", speakWordInsight);
   el.prevBtn.addEventListener("click", () => navigate(-1));
   el.nextBtn.addEventListener("click", () => navigate(1));
   el.viewToggle.addEventListener("click", toggleView);
@@ -454,12 +705,14 @@ function bindEvents() {
   el.celebrationOverlay.addEventListener("click", hideCelebration);
 
   // Game mode buttons (delegated)
-  el.gameModes.addEventListener("click", (e) => {
-    const btn = e.target.closest(".game-mode-btn");
-    if (!btn) return;
-    const key = btn.dataset.mode;
-    if (key) selectGameMode(key);
-  });
+  if (el.gameModes) {
+    el.gameModes.addEventListener("click", (e) => {
+      const btn = e.target.closest(".game-mode-btn");
+      if (!btn) return;
+      const key = btn.dataset.mode;
+      if (key) selectGameMode(key);
+    });
+  }
 
   el.speedSlider.addEventListener("input", () => {
     const val = Number(el.speedSlider.value);
@@ -474,7 +727,17 @@ function bindEvents() {
     showToast(state.autoAdvance ? "Auto-advance on" : "Auto-advance off", "");
   });
 
+  el.photoMode.addEventListener("change", () => {
+    state.useRealPhotos = el.photoMode.checked;
+    saveToStorage(REAL_PHOTOS_STORAGE_KEY, state.useRealPhotos);
+    resetPhotoCache();
+    renderWordDisplay();
+    if (state.viewMode === "grid") renderGrid();
+    showToast(state.useRealPhotos ? "Stock photos beta on" : "Stock photos beta off", "");
+  });
+
   bindToggleRow(el.autoAdvanceSetting, el.autoAdvance);
+  bindToggleRow(el.photoModeSetting, el.photoMode);
 
   el.voiceSelect.addEventListener("change", () => {
     const id = el.voiceSelect.value;
@@ -513,6 +776,7 @@ function selectCategory(key) {
   state.activeCategory = key;
   filterWords();
   state.currentIndex = 0;
+  refreshGridOrder();
   updateAccentColor();
   renderCategories();
   setCurrentWord(0);
@@ -525,6 +789,12 @@ function filterWords() {
   state.filteredWords = state.activeCategory === "all"
     ? WORDS
     : WORDS.filter((w) => w.category === state.activeCategory);
+}
+
+function refreshGridOrder() {
+  state.gridEntries = shuffle(
+    state.filteredWords.map((entry, index) => ({ entry, index }))
+  );
 }
 
 function updateAccentColor() {
@@ -565,12 +835,229 @@ function setCurrentWord(index) {
 function renderWordDisplay() {
   const entry = currentEntry();
   if (!entry) return;
-  el.artContainer.innerHTML = entry.art;
-  el.artContainer.classList.add("pulse");
-  el.wordTitle.textContent = formatDisplayText(entry.word);
+  renderArtContainer(entry);
+  renderWordTitle(entry);
   renderWordFacts(entry);
+  prefetchPhotoSet(getPriorityPhotoEntries(entry));
   animateArtBounce();
   animateTitleReveal();
+}
+
+function renderArtContainer(entry = currentEntry()) {
+  if (!el.artContainer || !entry) return;
+  el.artContainer.classList.add("pulse");
+
+  const cached = state.photoCache[entry.key];
+  if (cached?.status === "ready" && cached.photo) {
+    applyPhotoToArt(entry, cached.photo);
+    return;
+  }
+
+  const curated = getCuratedPhoto(entry);
+  if (curated) {
+    applyPhotoToArt(entry, curated);
+    return;
+  }
+
+  if (cached?.status === "failed" || cached?.status === "custom-missing") {
+    el.artContainer.classList.remove("photo-mode", "photo-loading");
+    el.artContainer.innerHTML = entry.art;
+    return;
+  }
+
+  el.artContainer.classList.remove("photo-mode");
+  el.artContainer.classList.add("photo-loading");
+  el.artContainer.innerHTML = entry.art;
+  fetchPreferredPhoto(entry, { updateCurrent: true });
+}
+
+function shouldUseStockPhoto(entry, context = "card") {
+  if (!state.useRealPhotos || !state.photoApiAvailable || !entry || entry.numberValue || state.gameMode !== "spell") {
+    return false;
+  }
+  const config = PHOTO_CATEGORY_CONFIG[entry.category];
+  if (config && !config.enabled) return false;
+  if (context === "grid") return true;
+  return true;
+}
+
+async function fetchPreferredPhoto(entry, options = {}) {
+  const existing = state.photoCache[entry.key];
+  if (existing?.status === "loading") return;
+
+  const requestId = options.updateCurrent ? ++state.photoRequestId : state.photoRequestId;
+  state.photoCache[entry.key] = { status: "loading" };
+
+  try {
+    const customPhoto = await requestCustomPhoto(entry);
+    if (customPhoto) {
+      state.photoCache[entry.key] = { status: "ready", photo: customPhoto };
+      if (state.viewMode === "grid") {
+        renderGrid();
+      }
+      if (options.updateCurrent) {
+        if (requestId !== state.photoRequestId) return;
+        if (!currentEntry() || currentEntry().key !== entry.key) return;
+        applyPhotoToArt(entry, customPhoto);
+        animateArtBounce();
+      }
+      return;
+    }
+
+    if (!shouldUseStockPhoto(entry, options.context || "card")) {
+      state.photoCache[entry.key] = { status: "custom-missing" };
+      if (options.updateCurrent) {
+        if (requestId !== state.photoRequestId) return;
+        el.artContainer.classList.remove("photo-mode", "photo-loading");
+        el.artContainer.innerHTML = entry.art;
+      }
+      return;
+    }
+
+    const photo = await requestRealPhoto(entry);
+    if (photo) {
+      state.photoCache[entry.key] = { status: "ready", photo };
+      if (state.viewMode === "grid") {
+        renderGrid();
+      }
+      if (options.updateCurrent) {
+        if (requestId !== state.photoRequestId) return;
+        if (!currentEntry() || currentEntry().key !== entry.key) return;
+        applyPhotoToArt(entry, photo);
+        animateArtBounce();
+      }
+      return;
+    }
+
+    state.photoCache[entry.key] = { status: "failed" };
+    if (options.updateCurrent) {
+      if (requestId !== state.photoRequestId) return;
+      el.artContainer.classList.remove("photo-mode", "photo-loading");
+      el.artContainer.innerHTML = entry.art;
+    }
+  } catch (_) {
+    state.photoCache[entry.key] = { status: "failed" };
+    if (options.updateCurrent) {
+      if (requestId !== state.photoRequestId) return;
+      el.artContainer.classList.remove("photo-mode", "photo-loading");
+      el.artContainer.innerHTML = entry.art;
+    }
+  }
+}
+
+async function requestCustomPhoto(entry) {
+  return null;
+}
+
+function resetPhotoCache() {
+  state.photoCache = {};
+}
+
+async function requestRealPhoto(entry) {
+  const query = buildPhotoQuery(entry);
+  const exclude = Object.entries(state.photoCache)
+    .filter(([key, cached]) => key !== entry.key && cached?.status === "ready" && cached.photo?.id)
+    .map(([, cached]) => cached.photo.id)
+    .join(",");
+  const res = await fetch(`/api/photos?query=${encodeURIComponent(query)}&category=${encodeURIComponent(entry.category)}&key=${encodeURIComponent(entry.key)}&exclude=${encodeURIComponent(exclude)}`);
+  if (!res.ok) {
+    throw new Error("Photo request failed");
+  }
+
+  const data = await res.json();
+  if (!data.configured) {
+    state.photoApiAvailable = false;
+    state.useRealPhotos = false;
+    saveToStorage(REAL_PHOTOS_STORAGE_KEY, false);
+    if (el.photoMode) el.photoMode.checked = false;
+    showToast("Add a Pixabay API key to improve real photos", "warning");
+    return null;
+  }
+
+  state.photoApiAvailable = true;
+  return data.photo || null;
+}
+
+function buildPhotoQuery(entry) {
+  const config = PHOTO_CATEGORY_CONFIG[entry.category];
+  const subject = PHOTO_QUERY_OVERRIDES[entry.key] || entry.label;
+  const hint = config?.hint || "single real photo";
+  return `photo of ${subject}, ${hint}`.trim();
+}
+
+function getCuratedPhoto(entry) {
+  const emoji = CURATED_EMOJI_MAP[entry?.key];
+  if (!emoji) return null;
+  const bg = entry.colors?.[0] || "#FFF8E1";
+  const accent = entry.colors?.[1] || "#FFFFFF";
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${bg}"/>
+          <stop offset="100%" stop-color="${accent}" stop-opacity="0.7"/>
+        </linearGradient>
+      </defs>
+      <rect width="200" height="200" rx="42" fill="url(#g)"/>
+      <text x="100" y="108" text-anchor="middle" dominant-baseline="middle" font-size="96" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${emoji}</text>
+    </svg>
+  `.trim();
+  const src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  return {
+    id: `curated:${entry.key}`,
+    src,
+    gridSrc: src,
+    alt: entry.label,
+    provider: "curated",
+  };
+}
+
+function applyPhotoToArt(entry, photo) {
+  el.artContainer.classList.add("photo-mode");
+  el.artContainer.classList.remove("photo-loading");
+  const curatedClass = photo.provider === "curated" ? " curated-photo" : "";
+  el.artContainer.innerHTML = `<img class="real-photo${curatedClass}" src="${photo.src}" alt="${escapeHtml(photo.alt || entry.label)}" />`;
+}
+
+function getPriorityPhotoEntries(entry = currentEntry()) {
+  const entries = [];
+  if (entry) entries.push(entry);
+  const neighbors = [-1, 1, 2].map((offset) => {
+    const list = state.filteredWords;
+    if (!list.length || !entry) return null;
+    const index = (state.currentIndex + offset + list.length) % list.length;
+    return list[index];
+  }).filter(Boolean);
+  entries.push(...neighbors);
+  return dedupeEntries(entries);
+}
+
+function prefetchPhotoSet(entries) {
+  dedupeEntries(entries)
+    .forEach((entry) => {
+      if (getCuratedPhoto(entry)) return;
+      const cached = state.photoCache[entry.key];
+      if (!cached) {
+        fetchPreferredPhoto(entry, { updateCurrent: false, context: "grid" });
+      }
+    });
+}
+
+function dedupeEntries(entries) {
+  const seen = new Set();
+  return entries.filter((entry) => {
+    if (!entry || seen.has(entry.key)) return false;
+    seen.add(entry.key);
+    return true;
+  });
+}
+
+function renderWordTitle(entry = currentEntry()) {
+  if (!el.wordTitle || !entry) return;
+  el.wordTitle.innerHTML = entry.word.split("").map((letter, index) => {
+    const focusClass = index === state.spellingFocusIndex ? " spelling-focus" : "";
+    return `<span class="word-letter${focusClass}">${formatDisplayText(letter)}</span>`;
+  }).join("");
 }
 
 function renderWordFacts(entry = currentEntry()) {
@@ -738,6 +1225,9 @@ function renderSlots() {
   entry.word.split("").forEach((letter, i) => {
     const slot = document.createElement("div");
     slot.className = "letter-slot";
+    if (i === state.spellingFocusIndex) {
+      slot.classList.add("spelling-focus");
+    }
 
     if (state.placed[i]) {
       const tile = findTile(state.placed[i]);
@@ -975,10 +1465,11 @@ function renderDots() {
 
 function toggleView() {
   state.viewMode = state.viewMode === "grid" ? "card" : "grid";
-  saveToStorage("din-english-garden-view", state.viewMode);
+  saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
   if (state.viewMode === "grid") {
     // Clean up any active game state when entering grid
     el.app.classList.remove("fullscreen-game");
+    refreshGridOrder();
   }
   applyViewMode(true);
 }
@@ -986,6 +1477,9 @@ function toggleView() {
 function applyViewMode(fromToggle) {
   if (state.viewMode === "grid") {
     el.app.classList.add("grid-mode");
+    if (!state.gridEntries.length || state.gridEntries.length !== state.filteredWords.length) {
+      refreshGridOrder();
+    }
     renderGrid();
   } else {
     el.app.classList.remove("grid-mode");
@@ -999,7 +1493,8 @@ function applyViewMode(fromToggle) {
 
 function renderGrid() {
   el.wordGrid.innerHTML = "";
-  state.filteredWords.forEach((entry, i) => {
+  const prefetchEntries = [];
+  state.gridEntries.forEach(({ entry, index }, i) => {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "grid-card" + (state.earnedWords.includes(entry.key) ? " earned" : "");
@@ -1010,10 +1505,11 @@ function renderGrid() {
       : entry.word.length >= 6
         ? `<span class="grid-tag">${entry.word.length} letters</span>`
         : "";
-    card.innerHTML = `${star}<div class="grid-art">${entry.art}</div><span class="grid-word">${formatDisplayText(entry.word)}</span>${tag}`;
+    const gridArt = renderGridArt(entry);
+    card.innerHTML = `${star}<div class="grid-art">${gridArt}</div><span class="grid-word">${formatDisplayText(entry.word)}</span>${tag}`;
 
     card.addEventListener("click", () => {
-      setCurrentWord(i);
+      setCurrentWord(index);
       speakCurrentWord();
       playTone(660, 0.06, 0.06);
     });
@@ -1024,20 +1520,45 @@ function renderGrid() {
       const now = Date.now();
       if (now - lastTap < 400) {
         state.viewMode = "card";
-        saveToStorage("din-english-garden-view", "card");
+        saveToStorage(VIEW_MODE_STORAGE_KEY, "card");
         applyViewMode(true);
       }
       lastTap = now;
     });
 
     el.wordGrid.appendChild(card);
+    if (i < 12) {
+      prefetchEntries.push(entry);
+    }
   });
+  prefetchPhotoSet(prefetchEntries);
   animateGridCards();
+}
+
+function renderGridArt(entry) {
+  const cached = state.photoCache[entry.key];
+  if (cached?.status === "ready" && cached.photo) {
+    const src = cached.photo.gridSrc || cached.photo.src;
+    const alt = escapeHtml(cached.photo.alt || entry.label);
+    const curatedClass = cached.photo.provider === "curated" ? " curated-photo" : "";
+    return `<img class="grid-real-photo${curatedClass}" src="${src}" alt="${alt}" />`;
+  }
+
+  const curated = getCuratedPhoto(entry);
+  if (curated) {
+    return `<img class="grid-real-photo curated-photo" src="${curated.gridSrc}" alt="${escapeHtml(curated.alt || entry.label)}" />`;
+  }
+
+  if (!cached) {
+    fetchPreferredPhoto(entry, { updateCurrent: false, context: "grid" });
+  }
+
+  return `<div class="grid-photo-placeholder">${entry.art}</div>`;
 }
 
 function switchToCardView(index) {
   state.viewMode = "card";
-  saveToStorage("din-english-garden-view", "card");
+  saveToStorage(VIEW_MODE_STORAGE_KEY, "card");
   setCurrentWord(index);
   applyViewMode(true);
   speakCurrentWord();
@@ -1154,6 +1675,7 @@ async function spellWord(word, sequenceId = state.speechSequenceId) {
   const letters = word.toLowerCase().split("");
   for (let i = 0; i < letters.length; i++) {
     if (!isSpeechSequenceActive(sequenceId)) return;
+    setSpellingFocus(i);
     await speakText(letters[i], {
       rate: getTeachingLetterRate(),
       pitch: 1,
@@ -1163,6 +1685,7 @@ async function spellWord(word, sequenceId = state.speechSequenceId) {
       await wait(700);
     }
   }
+  setSpellingFocus(-1);
 }
 
 async function previewVoice() {
@@ -1246,6 +1769,7 @@ function stopSpeech() {
   clearTimeout(state.completionSpeechTimer);
   clearTimeout(state.completionSoundTimer);
   state.speechSequenceId += 1;
+  setSpellingFocus(-1);
   if (state.speechAbortController) { state.speechAbortController.abort(); state.speechAbortController = null; }
   if (state.currentAudio) {
     state.currentAudio.pause();
@@ -1316,6 +1840,7 @@ function openSettings() {
   el.speedSlider.value = Math.round(state.speechRate * 100);
   updateSpeedLabel(Math.round(state.speechRate * 100));
   el.autoAdvance.checked = state.autoAdvance;
+  el.photoMode.checked = state.useRealPhotos;
 }
 
 function closeSettings() {
@@ -1385,22 +1910,35 @@ function refreshTextCase() {
   }
 }
 
+function setSpellingFocus(index) {
+  if (state.spellingFocusIndex === index) return;
+  state.spellingFocusIndex = index;
+  renderWordTitle();
+  if (state.gameMode === "spell") {
+    renderSlots();
+  }
+}
+
 function toggleTextCase() {
   state.useLowercaseText = !state.useLowercaseText;
   saveToStorage("din-english-garden-lowercase", state.useLowercaseText);
   refreshTextCase();
-  showToast(state.useLowercaseText ? "Lowercase letters on" : "Capital letters on", "");
+  showToast(state.useLowercaseText ? "Text mode: lowercase" : "Text mode: capitals", "");
 }
 
 function updateCaseToggleButton() {
   if (!el.caseToggleBtn) return;
-  const label = el.caseToggleBtn.querySelector(".case-toggle-label");
+  const current = el.caseToggleBtn.querySelector(".case-toggle-current");
   const useLowercase = state.useLowercaseText;
-  el.caseToggleBtn.classList.toggle("active", useLowercase);
-  el.caseToggleBtn.setAttribute("aria-pressed", String(useLowercase));
-  el.caseToggleBtn.setAttribute("aria-label", useLowercase ? "Use capital letters" : "Use lowercase letters");
-  if (label) {
-    label.textContent = useLowercase ? "abc" : "ABC";
+  el.caseToggleBtn.dataset.mode = useLowercase ? "lowercase" : "capitals";
+  el.caseToggleBtn.setAttribute(
+    "aria-label",
+    useLowercase
+      ? "Switch text mode. Current lowercase, next capitals"
+      : "Switch text mode. Current capitals, next lowercase"
+  );
+  if (current) {
+    current.textContent = useLowercase ? "abc" : "ABC";
   }
 }
 
@@ -1408,9 +1946,8 @@ function bindToggleRow(row, input) {
   if (!row || !input) return;
   row.style.cursor = "pointer";
   row.addEventListener("click", (event) => {
-    event.preventDefault();
-    input.checked = !input.checked;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
+    if (event.target === input) return;
+    input.click();
   });
 }
 
@@ -1454,6 +1991,15 @@ function cleanupCurrentAudioUrl(url = state.currentAudioUrl) {
   if (state.currentAudioUrl === url) {
     state.currentAudioUrl = null;
   }
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 // === GSAP ANIMATIONS ===
@@ -1610,6 +2156,24 @@ function renderGameModes() {
   });
 }
 
+// === HOME / GAME NAVIGATION ===
+
+function enterGame(mode) {
+  el.homeScreen.hidden = true;
+  el.gameScreen.hidden = false;
+  selectGameMode(mode);
+  // If returning to spell in grid mode, make sure grid mode reflects
+  if (mode === "spell" && state.viewMode !== "grid") {
+    renderWord();
+  }
+}
+
+function goHome() {
+  el.gameScreen.hidden = true;
+  el.homeScreen.hidden = false;
+  el.app.classList.remove("fullscreen-game");
+}
+
 function selectGameMode(key) {
   state.gameMode = key;
   saveToStorage("din-english-garden-gamemode", key);
@@ -1632,6 +2196,13 @@ function applyGameMode() {
     el.app.classList.add("fullscreen-game");
   } else {
     el.app.classList.remove("fullscreen-game");
+  }
+
+  // Hide stage for non-spell modes (pattern/sort don't need it, memory is fullscreen)
+  const isSpell = state.gameMode === "spell";
+  if (el.wordFacts) el.wordFacts.hidden = !isSpell;
+  if (el.stageView) {
+    el.stageView.hidden = !isSpell;
   }
 
   // Init the appropriate game

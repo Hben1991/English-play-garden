@@ -17,9 +17,28 @@ const AZURE_SPEECH_KEY = process.env.AZURE_SPEECH_KEY || "";
 const AZURE_SPEECH_REGION = process.env.AZURE_SPEECH_REGION || "";
 const AZURE_SPEECH_DEFAULT_VOICE =
   process.env.AZURE_SPEECH_DEFAULT_VOICE || "en-US-JennyMultilingualNeural";
+const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY || "";
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY || "";
 
 const STATIC_DIR = __dirname;
 const AUDIO_CACHE = new Map();
+const PHOTO_CACHE = new Map();
+
+const PIXABAY_CATEGORY_MAP = {
+  animals: "animals",
+  food: "food",
+  nature: "nature",
+  things: "education",
+};
+
+const PIXABAY_COLOR_MAP = {};
+
+const PIXABAY_CATEGORY_KEYWORDS = {
+  animals: ["animal", "pet", "wildlife", "cute"],
+  food: ["food", "fruit", "dessert", "meal", "drink"],
+  nature: ["nature", "outdoors", "sky", "plant", "landscape"],
+  things: ["object", "toy", "book", "school", "transport"],
+};
 
 const ELEVENLABS_VOICE_CACHE = { expiresAt: 0, voices: [] };
 const AZURE_VOICE_CACHE = { expiresAt: 0, voices: [] };
@@ -58,8 +77,14 @@ const server = http.createServer(async (request, response) => {
         ok: true,
         elevenlabs: isElevenLabsConfigured(),
         azure: isAzureConfigured(),
+        pixabay: isPixabayConfigured(),
+        pexels: isPexelsConfigured(),
         elevenLabsQuotaExhausted,
       });
+    }
+
+    if (request.method === "GET" && requestUrl.pathname === "/api/photos") {
+      return handlePhotos(requestUrl, response);
     }
 
     if (request.method === "GET") {
@@ -81,6 +106,8 @@ server.listen(PORT, HOST, () => {
   }
   if (isAzureConfigured()) console.log("  Azure TTS: enabled (primary)");
   if (isElevenLabsConfigured()) console.log("  ElevenLabs TTS: enabled (optional)");
+  if (isPixabayConfigured()) console.log("  Pixabay photos: enabled (preferred)");
+  if (isPexelsConfigured()) console.log("  Pexels photos: enabled (fallback)");
 });
 
 // ── Voices ────────────────────────────────────────────────────
@@ -233,6 +260,52 @@ async function handleTts(request, response) {
   response.end(audioBuffer);
 }
 
+// ── Photos ───────────────────────────────────────────────────
+
+async function handlePhotos(requestUrl, response) {
+  if (!isPixabayConfigured() && !isPexelsConfigured()) {
+    return sendJson(response, 200, { configured: false, photo: null });
+  }
+
+  const query = (requestUrl.searchParams.get("query") || "").trim();
+  const category = (requestUrl.searchParams.get("category") || "").trim();
+  const excludeIds = (requestUrl.searchParams.get("exclude") || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (!query) {
+    return sendJson(response, 400, { error: "Query is required" });
+  }
+
+  const cacheKey = `${category}::${query}`.toLowerCase();
+  const cached = excludeIds.length ? null : PHOTO_CACHE.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return sendJson(response, 200, { configured: true, photo: cached.photo });
+  }
+
+  try {
+    let photo = null;
+    if (isPixabayConfigured()) {
+      photo = await searchPixabayPhoto(query, category, excludeIds);
+    }
+    if (!photo && isPexelsConfigured()) {
+      photo = await searchPexelsPhoto(query, category, excludeIds);
+    }
+    if (!excludeIds.length) {
+      PHOTO_CACHE.set(cacheKey, {
+        photo,
+        expiresAt: Date.now() + 1000 * 60 * 60 * 12,
+      });
+      trimPhotoCache();
+    }
+    return sendJson(response, 200, { configured: true, photo });
+  } catch (error) {
+    console.error("Photo search error:", error.message);
+    return sendJson(response, 200, { configured: true, photo: null });
+  }
+}
+
 // ── ElevenLabs ────────────────────────────────────────────────
 
 async function getElevenLabsVoices() {
@@ -380,6 +453,172 @@ function buildAzureSpellingMarkup(text) {
     .join("");
 }
 
+async function searchPexelsPhoto(query, category, excludeIds = []) {
+  const url = new URL("https://api.pexels.com/v1/search");
+  url.searchParams.set("query", query);
+  url.searchParams.set("per_page", "20");
+  url.searchParams.set("orientation", "square");
+  url.searchParams.set("size", "medium");
+  url.searchParams.set("locale", "en-US");
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: PEXELS_API_KEY,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Pexels search failed: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const photos = Array.isArray(data.photos) ? data.photos : [];
+  const bestPhoto = chooseBestPexelsPhoto(photos, category, query, excludeIds);
+
+  if (!bestPhoto) return null;
+
+  return {
+    id: bestPhoto.id,
+    src: bestPhoto.src?.large || bestPhoto.src?.medium || bestPhoto.src?.original || "",
+    gridSrc: bestPhoto.src?.medium || bestPhoto.src?.small || bestPhoto.src?.large || bestPhoto.src?.original || "",
+    alt: bestPhoto.alt || query,
+    photographer: bestPhoto.photographer || "Pexels",
+    photographerUrl: bestPhoto.photographer_url || "https://www.pexels.com",
+    url: bestPhoto.url || "https://www.pexels.com",
+  };
+}
+
+function chooseBestPexelsPhoto(photos, category, query, excludeIds = []) {
+  const blockedTerms = [
+    "blood", "knife", "weapon", "scary", "horror", "alcohol", "beer", "wine", "cocktail",
+    "cigarette", "smoke", "nude", "dead", "injury", "monster", "dark", "creepy",
+  ];
+  const preferredTerms = ["cute", "bright", "colorful", "happy", "playful", "friendly", "soft", "kid", "child"];
+  const categoryTerms = {
+    animals: ["pet", "cute", "friendly"],
+    food: ["fresh", "fruit", "colorful"],
+    nature: ["sunny", "green", "bright"],
+    things: ["clean", "simple", "colorful"],
+    body: ["simple", "learning", "friendly"],
+    colors: ["bright", "colorful"],
+    numbers: ["counting", "toy", "blocks"],
+  };
+
+  const safePhotos = [...photos]
+    .filter((photo) => {
+      const text = `${photo.alt || ""} ${photo.url || ""}`.toLowerCase();
+      return !blockedTerms.some((term) => text.includes(term));
+    });
+  const withoutDuplicates = safePhotos.filter((photo) => !excludeIds.includes(String(photo.id)));
+  const pool = withoutDuplicates.length ? withoutDuplicates : safePhotos;
+
+  return pool
+    .sort((a, b) => scorePexelsPhoto(b, preferredTerms, categoryTerms[category] || [], query) - scorePexelsPhoto(a, preferredTerms, categoryTerms[category] || [], query))[0] || null;
+}
+
+function scorePexelsPhoto(photo, preferredTerms, categoryTerms, query) {
+  const text = `${photo.alt || ""} ${photo.url || ""}`.toLowerCase();
+  const tokens = String(query || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length > 2 && !["photo", "single", "bright", "simple", "clean", "object", "scene", "daylight", "background"].includes(token));
+  let score = 0;
+
+  for (const term of preferredTerms) {
+    if (text.includes(term)) score += 2;
+  }
+
+  for (const term of categoryTerms) {
+    if (text.includes(term)) score += 3;
+  }
+
+  if (photo.width && photo.height && Math.abs(photo.width - photo.height) < 700) {
+    score += 1;
+  }
+
+  for (const token of tokens) {
+    if (text.includes(token)) score += 5;
+  }
+
+  return score;
+}
+
+async function searchPixabayPhoto(query, category, excludeIds = []) {
+  const url = new URL("https://pixabay.com/api/");
+  url.searchParams.set("key", PIXABAY_API_KEY);
+  url.searchParams.set("q", query);
+  url.searchParams.set("image_type", "photo");
+  url.searchParams.set("safesearch", "true");
+  url.searchParams.set("lang", "en");
+  url.searchParams.set("per_page", "30");
+  url.searchParams.set("order", "popular");
+
+  const mappedCategory = PIXABAY_CATEGORY_MAP[category];
+  if (mappedCategory) url.searchParams.set("category", mappedCategory);
+
+  const color = PIXABAY_COLOR_MAP[category];
+  if (color) url.searchParams.set("colors", color);
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Pixabay search failed: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const photos = Array.isArray(data.hits) ? data.hits : [];
+  const bestPhoto = chooseBestPixabayPhoto(photos, category, query, excludeIds);
+  if (!bestPhoto) return null;
+
+  return {
+    id: bestPhoto.id,
+    src: bestPhoto.webformatURL || bestPhoto.largeImageURL || bestPhoto.previewURL || "",
+    gridSrc: bestPhoto.previewURL || bestPhoto.webformatURL || bestPhoto.largeImageURL || "",
+    alt: bestPhoto.tags || query,
+    photographer: bestPhoto.user || "Pixabay",
+    photographerUrl: `https://pixabay.com/users/${bestPhoto.user || "pixabay"}-${bestPhoto.user_id || ""}/`,
+    url: bestPhoto.pageURL || "https://pixabay.com",
+    provider: "pixabay",
+  };
+}
+
+function chooseBestPixabayPhoto(photos, category, query, excludeIds = []) {
+  const safePhotos = [...photos].filter((photo) => !excludeIds.includes(String(photo.id)));
+  const pool = safePhotos.length ? safePhotos : photos;
+
+  return pool
+    .sort((a, b) => scorePixabayPhoto(b, category, query) - scorePixabayPhoto(a, category, query))[0] || null;
+}
+
+function scorePixabayPhoto(photo, category, query) {
+  const text = `${photo.tags || ""} ${photo.type || ""}`.toLowerCase();
+  const tokens = String(query || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length > 2 && !["photo", "single", "bright", "simple", "clean", "object", "scene", "daylight", "background"].includes(token));
+
+  let score = 0;
+  for (const token of tokens) {
+    if (text.includes(token)) score += 6;
+  }
+
+  if (PIXABAY_CATEGORY_KEYWORDS[category]) {
+    for (const term of PIXABAY_CATEGORY_KEYWORDS[category]) {
+      if (text.includes(term)) score += 3;
+    }
+  }
+
+  if (photo.imageWidth && photo.imageHeight && photo.imageWidth >= 500 && photo.imageHeight >= 500) {
+    score += 2;
+  }
+
+  if (typeof photo.likes === "number") score += Math.min(photo.likes / 30, 4);
+  if (typeof photo.downloads === "number") score += Math.min(photo.downloads / 5000, 3);
+
+  return score;
+}
+
 // ── Static Files ──────────────────────────────────────────────
 
 function serveStaticFile(requestPath, response) {
@@ -430,6 +669,14 @@ function isAzureConfigured() {
   return Boolean(AZURE_SPEECH_KEY && AZURE_SPEECH_REGION && !AZURE_SPEECH_KEY.startsWith("your_") && !AZURE_SPEECH_REGION.startsWith("your_"));
 }
 
+function isPexelsConfigured() {
+  return Boolean(PEXELS_API_KEY && !PEXELS_API_KEY.startsWith("your_"));
+}
+
+function isPixabayConfigured() {
+  return Boolean(PIXABAY_API_KEY && !PIXABAY_API_KEY.startsWith("your_"));
+}
+
 function createCacheKey(payload) {
   return crypto.createHash("sha1").update(JSON.stringify(payload)).digest("hex");
 }
@@ -438,6 +685,13 @@ function trimAudioCache() {
   const keys = [...AUDIO_CACHE.keys()];
   while (keys.length > 80) {
     AUDIO_CACHE.delete(keys.shift());
+  }
+}
+
+function trimPhotoCache() {
+  const keys = [...PHOTO_CACHE.keys()];
+  while (keys.length > 120) {
+    PHOTO_CACHE.delete(keys.shift());
   }
 }
 
