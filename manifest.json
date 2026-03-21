@@ -1,0 +1,11 @@
+{
+  "name": "English Play Garden",
+  "short_name": "Play Garden",
+  "description": "A playful English word garden for Din and Emma with pictures, sounds, and letter games.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFF8F0",
+  "theme_color": "#FFF8F0",
+  "icons": []
+}

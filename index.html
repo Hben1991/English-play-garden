@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#FFF8F0" />
+    <title>English Play Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="top-bar">
+        <nav class="categories" id="categories" aria-label="Word categories"></nav>
+        <button class="case-toggle" id="caseToggleBtn" type="button" aria-label="Use capital letters">
+          <span class="case-toggle-label">ABC</span>
+        </button>
+        <button class="view-toggle" id="viewToggle" type="button" aria-label="Toggle grid view">
+          <svg class="icon-grid" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <svg class="icon-card" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="12" cy="11" r="3"/><path d="M8 18h8"/></svg>
+        </button>
+        <button class="settings-btn" id="settingsBtn" type="button" aria-label="Settings">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </button>
+      </header>
+
+      <nav class="game-modes" id="gameModes" aria-label="Game modes"></nav>
+
+      <section class="grid-view" id="gridView">
+        <div class="grid-scroll">
+          <div class="word-grid" id="wordGrid"></div>
+        </div>
+      </section>
+
+      <main class="stage" id="stageView">
+        <button class="arrow arrow-left" id="prevBtn" type="button" aria-label="Previous word">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6L9 12L15 18"/></svg>
+        </button>
+
+        <div class="word-display" id="wordDisplay">
+          <div class="art-container" id="artContainer"></div>
+          <h1 class="word-title" id="wordTitle"></h1>
+          <div class="word-facts" id="wordFacts" aria-live="polite"></div>
+          <div class="lesson-actions" id="lessonActions">
+            <button class="lesson-btn" id="hearBtn" type="button">Hear</button>
+            <button class="lesson-btn" id="spellBtn" type="button">Spell</button>
+            <button class="lesson-btn" id="countBtn" type="button">Count</button>
+          </div>
+        </div>
+
+        <button class="arrow arrow-right" id="nextBtn" type="button" aria-label="Next word">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M9 6L15 12L9 18"/></svg>
+        </button>
+      </main>
+
+      <section class="game-area" id="gameArea">
+        <!-- Spell Game -->
+        <div class="game-panel" id="spellGame" data-game="spell">
+          <div class="slots" id="slots" aria-label="Letter slots"></div>
+          <div class="tiles" id="tiles" aria-label="Letter tiles"></div>
+        </div>
+
+        <!-- Pattern Match Game -->
+        <div class="game-panel" id="patternGame" data-game="pattern" hidden>
+          <div class="pattern-sequence" id="patternSequence"></div>
+          <div class="pattern-options" id="patternOptions"></div>
+        </div>
+
+        <!-- Memory Pairs Game -->
+        <div class="game-panel" id="memoryGame" data-game="memory" hidden>
+          <div class="memory-board" id="memoryBoard"></div>
+        </div>
+
+        <!-- Category Sort Game -->
+        <div class="game-panel" id="sortGame" data-game="sort" hidden>
+          <div class="sort-item" id="sortItem"></div>
+          <div class="sort-buckets" id="sortBuckets"></div>
+        </div>
+      </section>
+
+      <footer class="bottom-bar">
+        <div class="dots" id="dots" aria-live="polite"></div>
+      </footer>
+
+      <div class="overlay" id="settingsOverlay" hidden>
+        <div class="panel settings-panel">
+          <h2>Parent Settings</h2>
+          <label class="setting">
+            <span class="setting-label">Speech Speed</span>
+            <div class="setting-control">
+              <input type="range" id="speedSlider" min="50" max="120" step="5" value="75" />
+              <span id="speedLabel" class="speed-label">Slow</span>
+            </div>
+          </label>
+          <label class="setting">
+            <span class="setting-label">Voice</span>
+            <select id="voiceSelect" class="voice-select"></select>
+            <button id="previewVoice" class="btn btn-preview" type="button">Preview voice with spelling</button>
+          </label>
+          <label class="setting toggle-setting" id="autoAdvanceSetting">
+            <span class="setting-label">Auto-advance after success</span>
+            <input type="checkbox" id="autoAdvance" class="toggle-input" />
+          </label>
+          <div class="settings-actions">
+            <button id="resetProgress" class="btn btn-danger" type="button">Reset Progress</button>
+            <button id="closeSettings" class="btn btn-primary" type="button">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="celebration-overlay" id="celebrationOverlay" hidden>
+        <div class="celebration-content">
+          <div class="celebration-mascots">
+            <img class="celebration-octopus" src="./octopus.png" alt="" draggable="false" />
+            <div class="celebration-star" id="celebrationStar">&#11088;</div>
+            <img class="celebration-robot" src="./robot.png" alt="" draggable="false" />
+          </div>
+          <div class="celebration-phrase" id="celebrationPhrase"></div>
+          <div class="celebration-word" id="celebrationWord"></div>
+        </div>
+      </div>
+
+      <div class="mascot" id="mascot">
+        <div class="mascot-body" id="mascotBody">
+          <img src="./octopus.png" alt="Octopus helper" draggable="false" />
+        </div>
+        <div class="mascot-bubble" id="mascotBubble"></div>
+      </div>
+
+      <div class="toast" id="toast" aria-live="assertive"></div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
