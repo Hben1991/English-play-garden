@@ -2320,11 +2320,25 @@ function applyGameMode() {
     el.app.classList.remove("fullscreen-game");
   }
 
-  // Hide stage for non-spell modes (pattern/sort don't need it, memory is fullscreen)
-  const isSpell = state.gameMode === "spell";
-  if (el.wordFacts) el.wordFacts.hidden = !isSpell;
+  // Hide stage for non-spell/listen modes (pattern/sort don't need it, memory is fullscreen)
+  const showStage = state.gameMode === "spell" || state.gameMode === "listen";
+  if (el.wordFacts) el.wordFacts.hidden = state.gameMode !== "spell";
   if (el.stageView) {
-    el.stageView.hidden = !isSpell;
+    el.stageView.hidden = !showStage;
+  }
+
+  // In listen mode, hide arrows and word title; show speaker icon in art container
+  if (state.gameMode === "listen") {
+    if (el.prevBtn) el.prevBtn.hidden = true;
+    if (el.nextBtn) el.nextBtn.hidden = true;
+    if (el.wordTitle) el.wordTitle.textContent = "";
+    if (el.artContainer) {
+      el.artContainer.classList.remove("photo-mode", "photo-loading");
+      el.artContainer.innerHTML = `<div class="listen-stage-speaker">🔊</div>`;
+    }
+  } else {
+    if (el.prevBtn) el.prevBtn.hidden = false;
+    if (el.nextBtn) el.nextBtn.hidden = false;
   }
 
   // Init the appropriate game
@@ -2882,6 +2896,23 @@ function handleSortTap(bucketCategory) {
 
 // === HEAR & FIND (LISTEN) GAME ===
 
+function renderListenCardArt(entry) {
+  const curated = getCuratedPhoto(entry);
+  if (curated) {
+    return `<img class="listen-real-photo curated-photo" src="${escapeHtml(curated.gridSrc || curated.src)}" alt="${escapeHtml(curated.alt || entry.label)}" loading="lazy" decoding="async" />`;
+  }
+  const cached = state.photoCache[entry.key];
+  if (cached?.status === "ready" && cached.photo) {
+    const src = cached.photo.gridSrc || cached.photo.src;
+    const alt = escapeHtml(cached.photo.alt || entry.label);
+    return `<img class="listen-real-photo" src="${src}" alt="${alt}" />`;
+  }
+  if (!cached) {
+    fetchPreferredPhoto(entry, { updateCurrent: false, context: "grid" });
+  }
+  return entry.art;
+}
+
 function getListenChoiceCount() {
   const lvl = state.listen.level;
   if (lvl <= 2) return 2;
@@ -2908,6 +2939,13 @@ function initListenRound() {
   const distractorPool = pool.filter((w) => w.key !== target.key);
   const distractors = shuffle(distractorPool).slice(0, count - 1);
   state.listen.choices = shuffle([target, ...distractors]);
+
+  // Reset stage to speaker icon for new round
+  if (el.artContainer) {
+    el.artContainer.classList.remove("photo-mode", "photo-loading");
+    el.artContainer.innerHTML = `<div class="listen-stage-speaker">🔊</div>`;
+  }
+  if (el.wordTitle) el.wordTitle.textContent = "";
 
   renderListenGame();
 
@@ -2940,7 +2978,7 @@ function renderListenGame() {
 
     const artWrap = document.createElement("div");
     artWrap.className = "listen-card-art";
-    artWrap.innerHTML = entry.art;
+    artWrap.innerHTML = renderListenCardArt(entry);
 
     const label = document.createElement("div");
     label.className = "listen-card-label";
@@ -2973,8 +3011,13 @@ function handleListenChoice(wordKey) {
     animateMascotReaction("happy");
     showMascotBubble(randomPhrase("listenCorrect"), 1500);
 
-    // Speak the word as reinforcement
+    // Reveal target in stage
     if (targetEntry) {
+      if (el.wordTitle) el.wordTitle.textContent = formatDisplayText(targetEntry.word);
+      renderArtContainer(targetEntry);
+      animateArtBounce();
+
+      // Speak the word as reinforcement
       speakText(targetEntry.label, { rate: getTeachingWordRate() });
     }
 

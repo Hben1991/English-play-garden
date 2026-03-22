@@ -1160,6 +1160,30 @@ button {
 
 /* ====== HEAR & FIND (LISTEN) GAME ====== */
 
+/* Speaker icon in stage art container during listen mode */
+.listen-stage-speaker {
+  font-size: clamp(3rem, 12vw, 5rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  animation: listenPulse 2s ease-in-out infinite;
+}
+
+@keyframes listenPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
+
+/* Photo images on listen cards */
+.listen-real-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
 [data-game="listen"] {
   flex: 1;
   justify-content: center;
@@ -1212,22 +1236,22 @@ button {
 
 .listen-choices {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   width: 100%;
   max-width: 440px;
   padding: 4px;
 }
 
-.listen-choices.cols-2 { grid-template-columns: 1fr; }
-.listen-choices.cols-3 { grid-template-columns: 1fr; }
-.listen-choices.cols-4 { grid-template-columns: repeat(2, 1fr); }
+.listen-choices.cols-2 { grid-template-columns: 1fr 1fr; }
+.listen-choices.cols-3 { grid-template-columns: 1fr 1fr; }
+.listen-choices.cols-4 { grid-template-columns: 1fr 1fr; }
 
 .listen-card {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 16px 24px;
+  gap: 8px;
+  padding: 10px;
   border: 2.5px dashed var(--glass-border);
   border-radius: var(--radius-lg);
   background: var(--glass);
@@ -1257,12 +1281,14 @@ button {
 }
 
 .listen-card-art {
-  width: clamp(80px, 24vw, 120px);
-  height: clamp(80px, 24vw, 120px);
+  width: clamp(60px, 20vw, 100px);
+  height: clamp(60px, 20vw, 100px);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-md);
 }
 
 .listen-card-art svg {
@@ -1273,10 +1299,11 @@ button {
 
 .listen-card-label {
   font-family: "Fredoka", sans-serif;
-  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  font-size: clamp(0.85rem, 3vw, 1.1rem);
   font-weight: 700;
   color: var(--text-soft);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  text-align: center;
 }
 
 .listen-progress {
@@ -1783,9 +1810,9 @@ button {
   .sort-bucket { min-height: 80px; padding: 8px 6px; }
   .sort-bucket-icon { font-size: 1.4rem; }
   .memory-board { gap: 6px; padding: 4px; }
-  .listen-choices { gap: 10px; max-width: 100%; }
-  .listen-card { padding: 14px 18px; gap: 14px; }
-  .listen-card-art { width: clamp(70px, 22vw, 100px); height: clamp(70px, 22vw, 100px); }
+  .listen-choices { gap: 8px; max-width: 100%; }
+  .listen-card { padding: 8px; gap: 6px; }
+  .listen-card-art { width: clamp(50px, 18vw, 80px); height: clamp(50px, 18vw, 80px); }
   .listen-replay { padding: 8px 16px; font-size: 0.82rem; }
 
   .slots,
@@ -2002,6 +2029,8 @@ button {
 .app.grid-mode .mascot { display: none; }
 .app:has(.home-screen:not([hidden])) .mascot { display: none; }
 .app:has([data-game="listen"]:not([hidden])) .mascot { display: none; }
+.app:has([data-game="listen"]:not([hidden])) .art-container::after { display: none; }
+.app:has([data-game="listen"]:not([hidden])) .arrow { display: none; }
 
 .mascot-body {
   width: 84px;
