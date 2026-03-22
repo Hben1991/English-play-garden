@@ -22,6 +22,7 @@ const GAME_MODES = [
   { key: "pattern", label: "Patterns", icon: "\uD83D\uDD2E" },
   { key: "memory", label: "Memory", icon: "\uD83E\uDDE0" },
   { key: "sort", label: "Sort", icon: "\uD83D\uDCE6" },
+  { key: "listen", label: "Listen", icon: "\uD83D\uDD0A" },
 ];
 
 // === WORD DATA ===
@@ -467,6 +468,76 @@ const WORDS = [
     colors: ["#FFF3E0", "#FFCC80", "#E65100"],
     art: frame(`<circle cx="100" cy="46" r="22" fill="#FFCC80"/><path d="M74 62 Q66 92 68 160 L132 160 Q134 92 126 62" fill="#FFCC80"/><path d="M86 78 V140 M100 78 V148 M114 78 V140" stroke="#FFB74D" stroke-width="3" stroke-linecap="round" opacity="0.3"/><path d="M78 90 Q100 96 122 90" fill="none" stroke="#FFE0B2" stroke-width="4" stroke-linecap="round" opacity="0.4"/><path d="M76 120 Q100 126 124 120" fill="none" stroke="#FFE0B2" stroke-width="4" stroke-linecap="round" opacity="0.4"/>`, "#FFF3E0") },
 
+  // ── Extra Animals ──
+  { key: "zebra", word: "ZEBRA", label: "zebra", category: "animals", sound: "Clip clop!",
+    colors: ["#F5F5F5", "#212121", "#9E9E9E"],
+    art: frame(`<ellipse cx="100" cy="148" rx="50" ry="8" fill="rgba(0,0,0,0.05)"/><ellipse cx="100" cy="104" rx="42" ry="34" fill="#FAFAFA"/><ellipse cx="100" cy="72" rx="28" ry="30" fill="#FAFAFA"/><path d="M88 42 Q84 24 76 30 M112 42 Q116 24 124 30" stroke="#212121" stroke-width="4" stroke-linecap="round"/><path d="M76 62 L90 84 M96 56 L108 86 M120 62 L110 84 M78 100 L92 134 M108 98 L122 136" stroke="#212121" stroke-width="5" stroke-linecap="round" opacity="0.8"/><circle cx="90" cy="68" r="5" fill="#212121"/><circle cx="110" cy="68" r="5" fill="#212121"/>`, "#F5F5F5") },
+  { key: "panda", word: "PANDA", label: "panda", category: "animals", sound: "Munch munch!",
+    colors: ["#F5F5F5", "#212121", "#9E9E9E"],
+    art: frame(`<circle cx="72" cy="54" r="18" fill="#212121"/><circle cx="128" cy="54" r="18" fill="#212121"/><circle cx="100" cy="94" r="44" fill="#FAFAFA"/><ellipse cx="82" cy="88" rx="14" ry="18" fill="#212121"/><ellipse cx="118" cy="88" rx="14" ry="18" fill="#212121"/><circle cx="82" cy="88" r="6" fill="#FFF"/><circle cx="118" cy="88" r="6" fill="#FFF"/><circle cx="84" cy="88" r="3" fill="#212121"/><circle cx="120" cy="88" r="3" fill="#212121"/><ellipse cx="100" cy="108" rx="16" ry="12" fill="#E0E0E0"/><circle cx="100" cy="104" r="5" fill="#212121"/><path d="M92 116 Q100 122 108 116" fill="none" stroke="#212121" stroke-width="3" stroke-linecap="round"/>`, "#F5F5F5") },
+  { key: "camel", word: "CAMEL", label: "camel", category: "animals", sound: "Hrumph!",
+    colors: ["#FFF3E0", "#D7A86E", "#8D6E63"],
+    art: frame(`<ellipse cx="100" cy="150" rx="54" ry="8" fill="rgba(0,0,0,0.05)"/><path d="M52 124 Q58 84 84 84 Q92 56 108 56 Q124 56 132 84 Q154 84 158 116 L158 136 H52 Z" fill="#D7A86E"/><rect x="62" y="132" width="12" height="28" rx="6" fill="#A1887F"/><rect x="84" y="132" width="12" height="28" rx="6" fill="#A1887F"/><rect x="122" y="132" width="12" height="28" rx="6" fill="#A1887F"/><rect x="144" y="132" width="12" height="28" rx="6" fill="#A1887F"/><path d="M148 92 Q160 82 164 96 Q160 110 148 110" fill="#D7A86E"/><circle cx="154" cy="96" r="4" fill="#5D4037"/>`, "#FFF3E0") },
+  { key: "koala", word: "KOALA", label: "koala", category: "animals", sound: "Snuggle!",
+    colors: ["#ECEFF1", "#B0BEC5", "#455A64"],
+    art: frame(`<circle cx="66" cy="70" r="22" fill="#90A4AE"/><circle cx="134" cy="70" r="22" fill="#90A4AE"/><circle cx="100" cy="96" r="46" fill="#B0BEC5"/><circle cx="84" cy="90" r="6" fill="#263238"/><circle cx="116" cy="90" r="6" fill="#263238"/><ellipse cx="100" cy="106" rx="18" ry="14" fill="#455A64"/><ellipse cx="100" cy="112" rx="12" ry="8" fill="#CFD8DC"/><path d="M90 122 Q100 130 110 122" fill="none" stroke="#455A64" stroke-width="3" stroke-linecap="round"/>`, "#ECEFF1") },
+
+  // ── Extra Food ──
+  { key: "lemon", word: "LEMON", label: "lemon", category: "food", sound: "Tangy!",
+    colors: ["#FFFDE7", "#FFEB3B", "#F9A825"],
+    art: frame(`<ellipse cx="100" cy="104" rx="48" ry="34" fill="#FFEB3B"/><path d="M52 104 L38 96 L52 88" fill="#FBC02D"/><path d="M148 104 L162 96 L148 88" fill="#FBC02D"/><circle cx="84" cy="94" r="8" fill="#FFF59D" opacity="0.7"/><path d="M100 72 Q108 56 122 62" fill="#66BB6A"/><path d="M78 104 Q100 86 122 104 Q100 122 78 104" fill="none" stroke="#F9A825" stroke-width="3" opacity="0.4"/>`, "#FFFDE7") },
+  { key: "carrot", word: "CARROT", label: "carrot", category: "food", sound: "Crunch!",
+    colors: ["#FFF3E0", "#FF8A65", "#2E7D32"],
+    art: frame(`<path d="M100 46 Q132 82 118 154 L82 154 Q68 82 100 46" fill="#FF8A65"/><path d="M94 56 Q86 34 74 32 Q80 48 86 62" fill="#4CAF50"/><path d="M106 56 Q114 34 126 32 Q120 48 114 62" fill="#43A047"/><path d="M90 90 H110 M88 108 H112 M86 126 H114" stroke="#E65100" stroke-width="3" stroke-linecap="round" opacity="0.45"/>`, "#FFF3E0") },
+  { key: "cheese", word: "CHEESE", label: "cheese", category: "food", sound: "Nibble!",
+    colors: ["#FFF8E1", "#FFD54F", "#FFB300"],
+    art: frame(`<path d="M44 134 L142 134 L156 86 L58 86 Z" fill="#FFD54F"/><circle cx="84" cy="112" r="8" fill="#FFC107"/><circle cx="108" cy="102" r="10" fill="#FFC107"/><circle cx="128" cy="120" r="6" fill="#FFC107"/><circle cx="78" cy="94" r="5" fill="#FFE082"/><path d="M58 86 Q82 62 116 72 Q138 78 156 86" fill="#FFEE58"/>`, "#FFF8E1") },
+  { key: "burger", word: "BURGER", label: "burger", category: "food", sound: "Yum!",
+    colors: ["#FFF8E1", "#FFCC80", "#6D4C41"],
+    art: frame(`<path d="M52 116 Q52 72 100 72 Q148 72 148 116 Z" fill="#FFCC80"/><rect x="54" y="116" width="92" height="16" rx="8" fill="#4CAF50"/><rect x="48" y="132" width="104" height="14" rx="7" fill="#6D4C41"/><rect x="56" y="146" width="88" height="12" rx="6" fill="#FFB74D"/><circle cx="78" cy="92" r="3" fill="#FFF8E1"/><circle cx="96" cy="88" r="3" fill="#FFF8E1"/><circle cx="118" cy="94" r="3" fill="#FFF8E1"/>`, "#FFF8E1") },
+
+  // ── Extra Nature ──
+  { key: "beach", word: "BEACH", label: "beach", category: "nature",
+    colors: ["#FFF8E1", "#4FC3F7", "#FFCC80"],
+    art: frame(`<rect x="24" y="32" width="152" height="70" rx="26" fill="#81D4FA"/><path d="M24 116 Q70 90 120 110 Q150 122 176 112 V164 H24 Z" fill="#FFCC80"/><path d="M24 104 Q68 82 118 100 Q152 112 176 102" fill="none" stroke="#FFF" stroke-width="5" stroke-linecap="round" opacity="0.8"/><circle cx="142" cy="56" r="14" fill="#FFD54F"/><path d="M56 134 Q64 112 72 134" fill="#66BB6A"/><path d="M70 136 Q78 114 86 136" fill="#43A047"/>`, "#FFF8E1") },
+  { key: "shell", word: "SHELL", label: "shell", category: "nature",
+    colors: ["#FFF3E0", "#FFCCBC", "#FF8A65"],
+    art: frame(`<path d="M56 124 Q56 72 100 72 Q144 72 144 124 Q144 150 100 156 Q56 150 56 124" fill="#FFCCBC"/><path d="M72 138 Q76 102 84 86 M88 146 Q92 106 100 82 M104 146 Q108 106 116 86 M120 138 Q124 102 132 92" stroke="#FF8A65" stroke-width="4" stroke-linecap="round" opacity="0.55"/><path d="M64 126 Q100 110 136 126" fill="none" stroke="#FFE0B2" stroke-width="5" stroke-linecap="round" opacity="0.5"/>`, "#FFF3E0") },
+  { key: "cactus", word: "CACTUS", label: "cactus", category: "nature",
+    colors: ["#E8F5E9", "#66BB6A", "#2E7D32"],
+    art: frame(`<rect x="84" y="48" width="32" height="96" rx="16" fill="#66BB6A"/><rect x="58" y="74" width="22" height="54" rx="11" fill="#66BB6A"/><rect x="120" y="70" width="22" height="50" rx="11" fill="#66BB6A"/><path d="M80 88 H58 M120 84 H142" stroke="#66BB6A" stroke-width="10" stroke-linecap="round"/><path d="M72 146 H128" stroke="#A1887F" stroke-width="12" stroke-linecap="round"/><path d="M86 60 L90 66 M100 52 L100 58 M114 62 L110 68 M66 92 L70 98 M134 88 L130 94" stroke="#2E7D32" stroke-width="2" stroke-linecap="round"/>`, "#E8F5E9") },
+  { key: "island", word: "ISLAND", label: "island", category: "nature",
+    colors: ["#E3F2FD", "#4FC3F7", "#66BB6A"],
+    art: frame(`<ellipse cx="100" cy="122" rx="44" ry="20" fill="#66BB6A"/><ellipse cx="100" cy="130" rx="54" ry="12" fill="#FFCC80"/><path d="M56 122 Q64 104 80 110 Q96 98 112 110 Q130 100 144 122" fill="#81C784"/><path d="M98 110 V66" stroke="#8D6E63" stroke-width="5" stroke-linecap="round"/><path d="M100 68 Q116 68 118 82 Q104 82 100 94 Q96 82 82 82 Q84 68 100 68" fill="#4CAF50"/><path d="M44 136 Q70 126 100 132 Q132 138 156 132" fill="none" stroke="#81D4FA" stroke-width="5" stroke-linecap="round"/>`, "#E3F2FD") },
+
+  // ── Extra Things ──
+  { key: "train", word: "TRAIN", label: "train", category: "things", sound: "Choo choo!",
+    colors: ["#E3F2FD", "#42A5F5", "#1565C0"],
+    art: frame(`<rect x="40" y="84" width="120" height="50" rx="10" fill="#42A5F5"/><rect x="58" y="62" width="54" height="32" rx="8" fill="#64B5F6"/><rect x="70" y="70" width="14" height="14" rx="3" fill="#E3F2FD"/><rect x="90" y="70" width="14" height="14" rx="3" fill="#E3F2FD"/><circle cx="70" cy="144" r="12" fill="#37474F"/><circle cx="130" cy="144" r="12" fill="#37474F"/><rect x="128" y="74" width="16" height="20" rx="4" fill="#90CAF9"/><path d="M54 108 H146" stroke="#BBDEFB" stroke-width="4" opacity="0.5"/>`, "#E3F2FD") },
+  { key: "phone", word: "PHONE", label: "phone", category: "things",
+    colors: ["#ECEFF1", "#455A64", "#90A4AE"],
+    art: frame(`<rect x="62" y="28" width="76" height="144" rx="18" fill="#455A64"/><rect x="70" y="42" width="60" height="102" rx="10" fill="#CFD8DC"/><circle cx="100" cy="156" r="6" fill="#B0BEC5"/><rect x="88" y="34" width="24" height="4" rx="2" fill="#90A4AE"/><circle cx="100" cy="88" r="18" fill="#E3F2FD" opacity="0.7"/>`, "#ECEFF1") },
+  { key: "chair", word: "CHAIR", label: "chair", category: "things",
+    colors: ["#EFEBE9", "#8D6E63", "#4E342E"],
+    art: frame(`<rect x="62" y="52" width="76" height="54" rx="10" fill="#A1887F"/><rect x="68" y="104" width="64" height="24" rx="8" fill="#8D6E63"/><rect x="70" y="126" width="10" height="34" rx="5" fill="#6D4C41"/><rect x="120" y="126" width="10" height="34" rx="5" fill="#6D4C41"/><rect x="60" y="62" width="10" height="66" rx="5" fill="#6D4C41"/><rect x="130" y="62" width="10" height="66" rx="5" fill="#6D4C41"/>`, "#EFEBE9") },
+  { key: "clock", word: "CLOCK", label: "clock", category: "things",
+    colors: ["#FFF8E1", "#FFD54F", "#6D4C41"],
+    art: frame(`<circle cx="100" cy="100" r="56" fill="#FFF8E1" stroke="#FFD54F" stroke-width="10"/><circle cx="100" cy="100" r="6" fill="#6D4C41"/><path d="M100 100 V70" stroke="#6D4C41" stroke-width="5" stroke-linecap="round"/><path d="M100 100 L126 112" stroke="#6D4C41" stroke-width="5" stroke-linecap="round"/><path d="M100 50 V60 M100 140 V150 M50 100 H60 M140 100 H150" stroke="#FFB300" stroke-width="4" stroke-linecap="round"/>`, "#FFF8E1") },
+
+  // ── Extra Body ──
+  { key: "foot", word: "FOOT", label: "foot", category: "body",
+    colors: ["#FFF3E0", "#FFCC80", "#E65100"],
+    art: frame(`<path d="M64 54 Q58 110 76 142 Q88 162 122 156 Q144 152 146 132 Q148 118 132 112 Q124 108 122 98 Q120 86 112 80 Q102 72 90 78 Q76 84 74 66" fill="#FFCC80"/><circle cx="128" cy="108" r="8" fill="#FFE0B2"/><circle cx="138" cy="118" r="7" fill="#FFE0B2"/><circle cx="140" cy="130" r="6" fill="#FFE0B2"/>`, "#FFF3E0") },
+  { key: "tooth", word: "TOOTH", label: "tooth", category: "body",
+    colors: ["#F5F5F5", "#FFFFFF", "#CFD8DC"],
+    art: frame(`<path d="M66 44 Q52 54 56 86 Q60 118 74 132 Q84 142 92 126 L100 104 L108 126 Q116 142 126 132 Q140 118 144 86 Q148 54 134 44 Q120 34 100 48 Q80 34 66 44" fill="#FFFFFF" stroke="#CFD8DC" stroke-width="4"/><circle cx="84" cy="76" r="8" fill="#E3F2FD" opacity="0.4"/>`, "#F5F5F5") },
+  { key: "mouth", word: "MOUTH", label: "mouth", category: "body",
+    colors: ["#FCE4EC", "#EF5350", "#C62828"],
+    art: frame(`<path d="M44 100 Q70 72 100 80 Q130 72 156 100 Q130 128 100 136 Q70 128 44 100" fill="#EF5350"/><path d="M54 100 Q76 118 100 122 Q124 118 146 100" fill="#E53935"/><path d="M58 100 Q78 92 100 94 Q122 92 142 100" fill="none" stroke="#FFCDD2" stroke-width="5" stroke-linecap="round" opacity="0.5"/>`, "#FCE4EC") },
+  { key: "teeth", word: "TEETH", label: "teeth", category: "body",
+    colors: ["#F5F5F5", "#FFFFFF", "#B0BEC5"],
+    art: frame(`<rect x="52" y="74" width="96" height="54" rx="16" fill="#FFFFFF" stroke="#CFD8DC" stroke-width="4"/><path d="M100 74 V128" stroke="#CFD8DC" stroke-width="4"/><path d="M76 74 V128 M124 74 V128 M64 74 V128 M136 74 V128" stroke="#E0E0E0" stroke-width="3"/><path d="M52 100 H148" stroke="#E0E0E0" stroke-width="3"/><path d="M60 66 Q100 52 140 66" fill="none" stroke="#EF9A9A" stroke-width="8" stroke-linecap="round" opacity="0.55"/>`, "#F5F5F5") },
+
   // ── New Colors ──
   { key: "gold", word: "GOLD", label: "gold", category: "colors",
     colors: ["#FFF8E1", "#FFD54F", "#FF8F00"],
@@ -488,8 +559,9 @@ WORDS.forEach((entry) => {
 });
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-const REAL_PHOTOS_STORAGE_KEY = "din-english-garden-real-photos-v3";
+const REAL_PHOTOS_STORAGE_KEY = "din-english-garden-real-photos-v4";
 const VIEW_MODE_STORAGE_KEY = "din-english-garden-view-v2";
+const TWEMOJI_ASSET_BASE = "https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/svg/";
 const PHOTO_CATEGORY_CONFIG = {
   animals: { enabled: true, hint: "single animal portrait outdoors bright friendly" },
   food: { enabled: true, hint: "single food item close up bright simple background" },
@@ -518,15 +590,22 @@ const PHOTO_QUERY_OVERRIDES = {
 };
 const CURATED_EMOJI_MAP = {
   dog: "🐶", cat: "🐱", fish: "🐟", bird: "🐦", duck: "🦆", cow: "🐮", pig: "🐷", bee: "🐝", bear: "🐻", hen: "🐔",
-  bug: "🐛", fox: "🦊", frog: "🐸", lion: "🦁", sheep: "🐑", horse: "🐴", snake: "🐍", turtle: "🐢", whale: "🐳", owl: "🦉",
+  bug: "🐞", fox: "🦊", frog: "🐸", lion: "🦁", sheep: "🐑", horse: "🐴", snake: "🐍", turtle: "🐢", whale: "🐳", owl: "🦉",
   ant: "🐜", crab: "🦀", rabbit: "🐰", monkey: "🐵", elephant: "🐘",
-  egg: "🥚", milk: "🥛", cake: "🎂", pie: "🥧", jam: "🍓", ice: "🍦", cup: "☕", apple: "🍎", bread: "🍞", corn: "🌽",
-  grape: "🍇", rice: "🍚", soup: "🍲", pizza: "🍕", candy: "🍬", peach: "🍑", plum: "🟣", banana: "🍌", cookie: "🍪", orange: "🍊",
+  zebra: "🦓", panda: "🐼", camel: "🐫", koala: "🐨",
+  egg: "🥚", milk: "🥛", cake: "🎂", pie: "🥧", jam: "🍓", ice: "🍦", cup: "🥤", apple: "🍎", bread: "🍞", corn: "🌽",
+  grape: "🍇", rice: "🍚", soup: "🍲", pizza: "🍕", candy: "🍬", peach: "🍑", plum: "🍇", banana: "🍌", cookie: "🍪", orange: "🍊",
+  lemon: "🍋", carrot: "🥕", cheese: "🧀", burger: "🍔",
   sun: "☀️", moon: "🌙", star: "⭐", tree: "🌳", rain: "🌧️", leaf: "🍃", sea: "🌊", cloud: "☁️", snow: "❄️", rock: "🪨",
-  hill: "⛰️", pond: "💧", rose: "🌹", wind: "💨", fire: "🔥", rainbow: "🌈", flower: "🌼",
+  hill: "⛰️", pond: "🏞️", rose: "🌹", wind: "💨", fire: "🔥", rainbow: "🌈", flower: "🌼",
+  beach: "🏖️", shell: "🐚", cactus: "🌵", island: "🏝️",
   ball: "⚽", car: "🚗", bus: "🚌", toy: "🧸", hat: "🧢", bed: "🛏️", box: "📦", key: "🔑", bag: "🎒", book: "📘",
   boat: "⛵", drum: "🥁", lamp: "💡", bell: "🔔", door: "🚪", ring: "💍", shoe: "👟", sock: "🧦", rope: "🪢", flag: "🚩",
-  rocket: "🚀", eye: "👁️", ear: "👂", nose: "👃", hand: "✋", leg: "🦵", finger: "☝️", lip: "👄",
+  train: "🚂", phone: "📱", chair: "🪑", clock: "🕒",
+  rocket: "🚀",
+  eye: "👁️", ear: "👂", nose: "👃", hand: "✋", leg: "🦵", toe: "🦶", finger: "☝️", shoulder: "💪",
+  head: "👤", face: "🙂", arm: "💪", lip: "👄", chin: "🙂", neck: "🧣", knee: "🦵", back: "🧍",
+  foot: "🦶", tooth: "🦷", mouth: "👄", teeth: "😁",
 };
 
 // === STATE ===
@@ -563,6 +642,8 @@ const PHRASES = {
   memoryComplete: ["All pairs found!", "Amazing memory!", "You remembered them all!"],
   sortCorrect: ["Right bucket!", "That goes there!", "Good sorting!", "You know it!", "Sorted!", "Perfect place!"],
   sortComplete: ["All sorted!", "Great organizing!", "Category master!"],
+  listenCorrect: ["Great ears!", "You heard it!", "That's the one!", "Sharp listening!", "Perfect match!", "You found it!"],
+  listenComplete: ["Listening champ!", "Amazing ears!", "You hear everything!"],
 };
 
 function randomPhrase(category) {
@@ -617,6 +698,9 @@ const state = {
 
   // Sort game state
   sort: { currentItem: null, buckets: [], queue: [], correct: 0, total: 0 },
+
+  // Listen game state
+  listen: { targetKey: null, choices: [], level: loadFromStorage("din-english-garden-listen-level", 1), round: 0, correctStreak: 0, recentTargets: [], answered: false },
 };
 
 // === DOM REFS ===
@@ -630,8 +714,9 @@ function cacheElements() {
     "wordDisplay", "artContainer", "wordTitle", "wordFacts",
     "gridView", "wordGrid", "stageView",
     "slots", "tiles", "dots",
-    "gameModes", "gameArea", "spellGame", "patternGame", "memoryGame", "sortGame",
+    "gameModes", "gameArea", "spellGame", "patternGame", "memoryGame", "sortGame", "listenGame",
     "patternSequence", "patternOptions", "memoryBoard", "sortItem", "sortBuckets",
+    "listenPrompt", "listenReplay", "listenChoices", "listenProgress",
     "settingsOverlay", "speedSlider", "speedLabel",
     "voiceSelect", "autoAdvance", "autoAdvanceSetting", "photoMode", "photoModeSetting", "resetProgress", "closeSettings",
     "celebrationOverlay", "celebrationStar", "celebrationWord", "celebrationPhrase",
@@ -649,6 +734,7 @@ function cacheElements() {
 function init() {
   cacheElements();
   filterWords();
+  refreshLearnOrder();
   refreshGridOrder();
   updateAccentColor();
   updateCaseToggleButton();
@@ -663,8 +749,8 @@ function init() {
   renderDots();
   applyGameMode();
   applyViewMode();
-  el.homeScreen.hidden = true;
-  el.gameScreen.hidden = false;
+  el.homeScreen.hidden = false;
+  el.gameScreen.hidden = true;
   if (el.backBtn) el.backBtn.hidden = true;
   if (el.gameModes) el.gameModes.hidden = true;
 }
@@ -675,19 +761,7 @@ function bindEvents() {
   // Home screen navigation
   document.querySelectorAll("[data-home]").forEach((card) => {
     card.addEventListener("click", () => {
-      const target = card.dataset.home;
-      if (target === "settings") {
-        openSettings();
-        return;
-      }
-      if (target === "browse") {
-        state.viewMode = "grid";
-        saveToStorage(VIEW_MODE_STORAGE_KEY, "grid");
-        enterGame("spell");
-        applyViewMode();
-        return;
-      }
-      enterGame(target);
+      openHomeDestination(card.dataset.home);
     });
   });
   if (el.backBtn) {
@@ -747,6 +821,14 @@ function bindEvents() {
 
   document.getElementById("previewVoice").addEventListener("click", previewVoice);
 
+  // Listen game replay button
+  if (el.listenReplay) {
+    el.listenReplay.addEventListener("click", () => {
+      const entry = WORDS.find((w) => w.key === state.listen.targetKey);
+      if (entry) speakText(entry.label, { rate: getTeachingWordRate() });
+    });
+  }
+
   // Swipe support
   let touchStartX = 0;
   el.wordDisplay.addEventListener("touchstart", (e) => {
@@ -775,6 +857,7 @@ function renderCategories() {
 function selectCategory(key) {
   state.activeCategory = key;
   filterWords();
+  refreshLearnOrder();
   state.currentIndex = 0;
   refreshGridOrder();
   updateAccentColor();
@@ -789,6 +872,10 @@ function filterWords() {
   state.filteredWords = state.activeCategory === "all"
     ? WORDS
     : WORDS.filter((w) => w.category === state.activeCategory);
+}
+
+function refreshLearnOrder() {
+  state.filteredWords = shuffle(state.filteredWords);
 }
 
 function refreshGridOrder() {
@@ -877,7 +964,7 @@ function shouldUseStockPhoto(entry, context = "card") {
   }
   const config = PHOTO_CATEGORY_CONFIG[entry.category];
   if (config && !config.enabled) return false;
-  if (context === "grid") return true;
+  if (context === "grid") return false;
   return true;
 }
 
@@ -985,28 +1072,20 @@ function buildPhotoQuery(entry) {
   return `photo of ${subject}, ${hint}`.trim();
 }
 
+function emojiToAssetCode(emoji) {
+  return Array.from(emoji.normalize("NFKD"))
+    .filter((char) => char.codePointAt(0) !== 0xFE0F)
+    .map((char) => char.codePointAt(0).toString(16))
+    .join("-");
+}
+
 function getCuratedPhoto(entry) {
   const emoji = CURATED_EMOJI_MAP[entry?.key];
   if (!emoji) return null;
-  const bg = entry.colors?.[0] || "#FFF8E1";
-  const accent = entry.colors?.[1] || "#FFFFFF";
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-      <defs>
-        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="${bg}"/>
-          <stop offset="100%" stop-color="${accent}" stop-opacity="0.7"/>
-        </linearGradient>
-      </defs>
-      <rect width="200" height="200" rx="42" fill="url(#g)"/>
-      <text x="100" y="108" text-anchor="middle" dominant-baseline="middle" font-size="96" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${emoji}</text>
-    </svg>
-  `.trim();
-  const src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   return {
     id: `curated:${entry.key}`,
-    src,
-    gridSrc: src,
+    src: `${TWEMOJI_ASSET_BASE}${emojiToAssetCode(emoji)}.svg`,
+    gridSrc: `${TWEMOJI_ASSET_BASE}${emojiToAssetCode(emoji)}.svg`,
     alt: entry.label,
     provider: "curated",
   };
@@ -1016,7 +1095,7 @@ function applyPhotoToArt(entry, photo) {
   el.artContainer.classList.add("photo-mode");
   el.artContainer.classList.remove("photo-loading");
   const curatedClass = photo.provider === "curated" ? " curated-photo" : "";
-  el.artContainer.innerHTML = `<img class="real-photo${curatedClass}" src="${photo.src}" alt="${escapeHtml(photo.alt || entry.label)}" />`;
+  el.artContainer.innerHTML = `<img class="real-photo${curatedClass}" src="${escapeHtml(photo.src)}" alt="${escapeHtml(photo.alt || entry.label)}" decoding="async" />`;
 }
 
 function getPriorityPhotoEntries(entry = currentEntry()) {
@@ -1536,17 +1615,16 @@ function renderGrid() {
 }
 
 function renderGridArt(entry) {
+  const curated = getCuratedPhoto(entry);
+  if (curated) {
+    return `<img class="grid-real-photo curated-photo" src="${escapeHtml(curated.gridSrc || curated.src)}" alt="${escapeHtml(curated.alt || entry.label)}" loading="lazy" decoding="async" />`;
+  }
+
   const cached = state.photoCache[entry.key];
   if (cached?.status === "ready" && cached.photo) {
     const src = cached.photo.gridSrc || cached.photo.src;
     const alt = escapeHtml(cached.photo.alt || entry.label);
-    const curatedClass = cached.photo.provider === "curated" ? " curated-photo" : "";
-    return `<img class="grid-real-photo${curatedClass}" src="${src}" alt="${alt}" />`;
-  }
-
-  const curated = getCuratedPhoto(entry);
-  if (curated) {
-    return `<img class="grid-real-photo curated-photo" src="${curated.gridSrc}" alt="${escapeHtml(curated.alt || entry.label)}" />`;
+    return `<img class="grid-real-photo" src="${src}" alt="${alt}" />`;
   }
 
   if (!cached) {
@@ -1855,6 +1933,10 @@ function resetProgress() {
   saveToStorage("din-english-garden-pattern-level", 1);
   state.memory.level = 1;
   saveToStorage("din-english-garden-memory-level", 1);
+  state.listen.level = 1;
+  state.listen.correctStreak = 0;
+  state.listen.recentTargets = [];
+  saveToStorage("din-english-garden-listen-level", 1);
   state.sort.correct = 0;
   state.sort.total = 0;
   renderDots();
@@ -2174,6 +2256,33 @@ function goHome() {
   el.app.classList.remove("fullscreen-game");
 }
 
+function openHomeDestination(target) {
+  if (target === "settings") {
+    openSettings();
+    return;
+  }
+
+  if (target === "spell") {
+    state.viewMode = "card";
+    saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
+    refreshLearnOrder();
+    enterGame("spell");
+    applyViewMode();
+    return;
+  }
+
+  if (target === "browse") {
+    state.viewMode = "grid";
+    saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
+    refreshGridOrder();
+    enterGame("spell");
+    applyViewMode();
+    return;
+  }
+
+  enterGame(target);
+}
+
 function selectGameMode(key) {
   state.gameMode = key;
   saveToStorage("din-english-garden-gamemode", key);
@@ -2190,6 +2299,13 @@ function applyGameMode() {
   // Show the matching panel
   const activePanel = el.gameArea.querySelector(`[data-game="${state.gameMode}"]`);
   if (activePanel) activePanel.hidden = false;
+
+  // Force card view for non-spell games that need game-area visible
+  if (state.gameMode !== "spell" && state.viewMode === "grid") {
+    state.viewMode = "card";
+    saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
+    el.app.classList.remove("grid-mode");
+  }
 
   // Fullscreen for memory
   if (state.gameMode === "memory") {
@@ -2218,6 +2334,9 @@ function applyGameMode() {
       break;
     case "sort":
       initSortGame();
+      break;
+    case "listen":
+      initListenRound();
       break;
   }
 }
@@ -2752,6 +2871,141 @@ function handleSortTap(bucketCategory) {
     if (correctCat) {
       showToast(`Hint: ${correctCat.icon} ${correctCat.label}`, "warning");
     }
+  }
+}
+
+// === HEAR & FIND (LISTEN) GAME ===
+
+function getListenChoiceCount() {
+  const lvl = state.listen.level;
+  if (lvl <= 2) return 2;
+  if (lvl <= 4) return 3;
+  return 4;
+}
+
+function initListenRound() {
+  const pool = state.filteredWords.length >= 4 ? state.filteredWords : WORDS;
+  const available = pool.filter((w) => !state.listen.recentTargets.includes(w.key));
+  const candidates = available.length >= 2 ? available : pool;
+
+  // Pick target
+  const target = candidates[Math.floor(Math.random() * candidates.length)];
+  state.listen.targetKey = target.key;
+  state.listen.answered = false;
+
+  // Track recents (keep last 8)
+  state.listen.recentTargets.push(target.key);
+  if (state.listen.recentTargets.length > 8) state.listen.recentTargets.shift();
+
+  // Build choices
+  const count = getListenChoiceCount();
+  const distractorPool = pool.filter((w) => w.key !== target.key);
+  const distractors = shuffle(distractorPool).slice(0, count - 1);
+  state.listen.choices = shuffle([target, ...distractors]);
+
+  renderListenGame();
+
+  // Auto-speak the target word after a short beat
+  setTimeout(() => {
+    speakText(target.label, { rate: getTeachingWordRate() });
+  }, 400);
+}
+
+function renderListenGame() {
+  if (!el.listenPrompt || !el.listenChoices || !el.listenProgress) return;
+
+  // Prompt
+  el.listenPrompt.textContent = "What did you hear?";
+
+  // Progress
+  const roundNum = state.listen.round + 1;
+  el.listenProgress.textContent = `Round ${roundNum} · Level ${state.listen.level}`;
+
+  // Choice cards
+  el.listenChoices.innerHTML = "";
+  const count = state.listen.choices.length;
+  el.listenChoices.className = "listen-choices cols-" + count;
+
+  state.listen.choices.forEach((entry) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "listen-card";
+    card.dataset.wordKey = entry.key;
+
+    const artWrap = document.createElement("div");
+    artWrap.className = "listen-card-art";
+    artWrap.innerHTML = entry.art;
+
+    const label = document.createElement("div");
+    label.className = "listen-card-label";
+    label.textContent = formatDisplayText(entry.word);
+
+    card.appendChild(artWrap);
+    card.appendChild(label);
+    card.addEventListener("click", () => handleListenChoice(entry.key));
+    el.listenChoices.appendChild(card);
+  });
+}
+
+function handleListenChoice(wordKey) {
+  if (state.listen.answered) return;
+
+  const isCorrect = wordKey === state.listen.targetKey;
+  const cardEl = el.listenChoices.querySelector(`[data-word-key="${wordKey}"]`);
+  const targetEntry = WORDS.find((w) => w.key === state.listen.targetKey);
+
+  if (isCorrect) {
+    state.listen.answered = true;
+    state.listen.correctStreak++;
+    state.listen.round++;
+
+    if (cardEl) {
+      cardEl.classList.add("correct");
+    }
+
+    playCorrectSound();
+    animateMascotReaction("happy");
+    showMascotBubble(randomPhrase("listenCorrect"), 1500);
+
+    // Speak the word as reinforcement
+    if (targetEntry) {
+      speakText(targetEntry.label, { rate: getTeachingWordRate() });
+    }
+
+    // Level up after 4 consecutive correct
+    if (state.listen.correctStreak >= 4 && state.listen.level < 5) {
+      state.listen.level++;
+      state.listen.correctStreak = 0;
+      saveToStorage("din-english-garden-listen-level", state.listen.level);
+      setTimeout(() => showToast("Level up!", "success"), 600);
+    }
+
+    // Celebration every 5 rounds
+    if (state.listen.round % 5 === 0 && targetEntry) {
+      setTimeout(() => {
+        playSuccessChime();
+        showMascotBubble(randomPhrase("listenComplete"), 3000);
+      }, 500);
+    }
+
+    // Advance after a beat
+    setTimeout(() => initListenRound(), 1200);
+  } else {
+    // Wrong — gentle feedback
+    playWrongSound();
+    animateMascotReaction("sad");
+
+    if (cardEl) {
+      cardEl.classList.add("wrong");
+      cardEl.addEventListener("animationend", () => cardEl.classList.remove("wrong"), { once: true });
+    }
+
+    state.listen.correctStreak = 0;
+
+    // Replay the target word after a short delay to help
+    setTimeout(() => {
+      if (targetEntry) speakText(targetEntry.label, { rate: getTeachingWordRate() });
+    }, 800);
   }
 }
 
