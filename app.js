@@ -2266,8 +2266,14 @@ function openHomeDestination(target) {
     state.viewMode = "card";
     saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
     refreshLearnOrder();
+    setCurrentWord(0);
     enterGame("spell");
     applyViewMode();
+    return;
+  }
+
+  if (target === "pattern" || target === "memory" || target === "sort" || target === "listen") {
+    enterGame(target);
     return;
   }
 
