@@ -3308,7 +3308,8 @@ const trainEl = {};
 
 function cacheTrainElements() {
   const ids = ["trainScreen", "trainBackBtn", "trainCounter", "trainViewport", "trainTrack",
-    "trainControls", "trainAddBtn", "trainChallenge", "trainChallengePrompt", "trainChallengeOptions"];
+    "trainControls", "trainAddBtn", "trainChallenge", "trainChallengePrompt", "trainChallengeOptions",
+    "trainHero", "trainHeroNumber", "trainHeroWord", "trainBottom"];
   ids.forEach((id) => {
     trainEl[id] = document.getElementById(id);
   });
@@ -3327,6 +3328,7 @@ function openTrainGame() {
   trainEl.trainControls.hidden = false;
   renderTrain();
   updateTrainCounter();
+  updateTrainHero();
 
   // Bind events once
   if (!trainEl._bound) {
@@ -3351,6 +3353,24 @@ function updateTrainCounter() {
   }
 }
 
+function updateTrainHero() {
+  if (!trainEl.trainHeroNumber) return;
+  const n = trainState.currentNumber;
+  if (n === 0) {
+    trainEl.trainHeroNumber.textContent = "";
+    trainEl.trainHeroWord.textContent = "Tap + to start!";
+    trainEl.trainHeroNumber.style.color = "var(--text)";
+  } else {
+    trainEl.trainHeroNumber.textContent = n;
+    trainEl.trainHeroWord.textContent = numberToEnglish(n);
+    trainEl.trainHeroNumber.style.color = getCarriageColor(n);
+    // Pop animation
+    trainEl.trainHeroNumber.classList.remove("pop");
+    void trainEl.trainHeroNumber.offsetWidth;
+    trainEl.trainHeroNumber.classList.add("pop");
+  }
+}
+
 function renderTrain() {
   const track = trainEl.trainTrack;
   track.innerHTML = "";
@@ -3358,7 +3378,7 @@ function renderTrain() {
   // Engine
   const engine = document.createElement("div");
   engine.className = "train-engine";
-  engine.innerHTML = `<div class="engine-wheels"><span class="engine-wheel"></span><span class="engine-wheel"></span><span class="engine-wheel"></span></div>`;
+  engine.innerHTML = `<span class="train-engine-emoji">🚂</span><div class="engine-wheels"><span class="engine-wheel"></span><span class="engine-wheel"></span></div>`;
   track.appendChild(engine);
 
   // Carriages for numbers 1..currentNumber
@@ -3405,6 +3425,7 @@ function addCarriage(n, withAnimation) {
   track.appendChild(carriage);
 
   scrollTrainToEnd();
+  updateTrainHero();
   speakNumber(n);
 
   // Milestone celebrations at 10, 20, 30, etc.
@@ -3414,11 +3435,13 @@ function addCarriage(n, withAnimation) {
 }
 
 function scrollTrainToEnd() {
+  const viewport = trainEl.trainViewport;
+  if (!viewport) return;
+  // Double rAF to ensure DOM has updated
   requestAnimationFrame(() => {
-    const viewport = trainEl.trainViewport;
-    if (viewport) {
-      viewport.scrollLeft = viewport.scrollWidth;
-    }
+    requestAnimationFrame(() => {
+      viewport.scrollTo({ left: viewport.scrollWidth, behavior: "smooth" });
+    });
   });
 }
 
@@ -3464,8 +3487,8 @@ function showTrainChallenge(correctNumber) {
   trainState.challengeCorrectNumber = correctNumber;
 
   // Hide add button, show challenge
-  trainEl.trainControls.hidden = true;
-  trainEl.trainChallenge.hidden = false;
+  if (trainEl.trainControls) trainEl.trainControls.hidden = true;
+  if (trainEl.trainChallenge) trainEl.trainChallenge.hidden = false;
 
   // Generate options: correct + 2 wrong ones
   const options = [correctNumber];
