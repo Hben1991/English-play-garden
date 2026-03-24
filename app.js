@@ -700,7 +700,22 @@ const state = {
   sort: { currentItem: null, buckets: [], queue: [], correct: 0, total: 0 },
 
   // Listen game state
-  listen: { targetKey: null, choices: [], level: loadFromStorage("din-english-garden-listen-level", 1), round: 0, correctStreak: 0, recentTargets: [], answered: false },
+  listen: {
+    targetKey: null,
+    choices: [],
+    level: loadFromStorage("din-english-garden-listen-level", 1),
+    round: 0,
+    correctStreak: 0,
+    recentTargets: [],
+    answered: false,
+    sessionId: 0,
+    roundToken: 0,
+    speakTimer: null,
+    replayTimer: null,
+    advanceTimer: null,
+    levelUpTimer: null,
+    completeTimer: null,
+  },
 };
 
 // === DOM REFS ===
@@ -713,7 +728,7 @@ function cacheElements() {
     "categories", "settingsBtn", "viewToggle", "caseToggleBtn", "prevBtn", "nextBtn",
     "wordDisplay", "artContainer", "wordTitle", "wordFacts",
     "gridView", "wordGrid", "stageView",
-    "slots", "tiles", "dots",
+    "slots", "tiles", "dots", "bottomBar",
     "gameModes", "gameArea", "spellGame", "patternGame", "memoryGame", "sortGame", "listenGame",
     "patternSequence", "patternOptions", "memoryBoard", "sortItem", "sortBuckets",
     "listenPrompt", "listenReplay", "listenChoices", "listenProgress",
@@ -768,7 +783,13 @@ function bindEvents() {
     el.backBtn.addEventListener("click", goHome);
   }
 
-  el.artContainer.addEventListener("click", () => speakCurrentWord());
+  el.artContainer.addEventListener("click", () => {
+    if (state.gameMode === "listen") {
+      replayListenTarget();
+      return;
+    }
+    speakCurrentWord();
+  });
   el.prevBtn.addEventListener("click", () => navigate(-1));
   el.nextBtn.addEventListener("click", () => navigate(1));
   el.viewToggle.addEventListener("click", toggleView);
@@ -824,8 +845,7 @@ function bindEvents() {
   // Listen game replay button
   if (el.listenReplay) {
     el.listenReplay.addEventListener("click", () => {
-      const entry = WORDS.find((w) => w.key === state.listen.targetKey);
-      if (entry) speakText(entry.label, { rate: getTeachingWordRate() });
+      replayListenTarget();
     });
   }
 
@@ -862,6 +882,9 @@ function selectCategory(key) {
   refreshGridOrder();
   updateAccentColor();
   renderCategories();
+  if (state.gameMode === "listen") {
+    resetListenSession({ preserveLevel: true });
+  }
   setCurrentWord(0);
   renderDots();
   if (state.viewMode === "grid") renderGrid();
@@ -1533,6 +1556,7 @@ function renderDots() {
     if (i === state.currentIndex) dot.classList.add("current");
     if (state.earnedWords.includes(entry.key)) dot.classList.add("earned");
     dot.addEventListener("click", () => {
+      if (state.gameMode !== "spell") return;
       setCurrentWord(i);
       speakCurrentWord();
     });
@@ -1543,6 +1567,7 @@ function renderDots() {
 // === VIEW TOGGLE ===
 
 function toggleView() {
+  if (state.gameMode !== "spell") return;
   state.viewMode = state.viewMode === "grid" ? "card" : "grid";
   saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
   if (state.viewMode === "grid") {
@@ -1933,9 +1958,7 @@ function resetProgress() {
   saveToStorage("din-english-garden-pattern-level", 1);
   state.memory.level = 1;
   saveToStorage("din-english-garden-memory-level", 1);
-  state.listen.level = 1;
-  state.listen.correctStreak = 0;
-  state.listen.recentTargets = [];
+  resetListenSession({ preserveLevel: false });
   saveToStorage("din-english-garden-listen-level", 1);
   state.sort.correct = 0;
   state.sort.total = 0;
@@ -2243,6 +2266,9 @@ function renderGameModes() {
 function enterGame(mode) {
   el.homeScreen.hidden = true;
   el.gameScreen.hidden = false;
+  if (mode === "listen") {
+    resetListenSession({ preserveLevel: true });
+  }
   selectGameMode(mode);
   // If returning to spell in grid mode, make sure grid mode reflects
   if (mode === "spell" && state.viewMode !== "grid") {
@@ -2251,6 +2277,9 @@ function enterGame(mode) {
 }
 
 function goHome() {
+  clearListenTimers();
+  clearTransientUiState();
+  stopSpeech();
   el.gameScreen.hidden = true;
   el.homeScreen.hidden = false;
   el.app.classList.remove("fullscreen-game");
@@ -2290,6 +2319,10 @@ function openHomeDestination(target) {
 }
 
 function selectGameMode(key) {
+  if (state.gameMode === "listen" && key !== "listen") {
+    clearListenTimers();
+    stopSpeech();
+  }
   state.gameMode = key;
   saveToStorage("din-english-garden-gamemode", key);
   renderGameModes();
@@ -2311,6 +2344,13 @@ function applyGameMode() {
     state.viewMode = "card";
     saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
     el.app.classList.remove("grid-mode");
+  }
+
+  if (el.viewToggle) {
+    el.viewToggle.hidden = state.gameMode !== "spell";
+  }
+  if (el.bottomBar) {
+    el.bottomBar.hidden = state.gameMode !== "spell";
   }
 
   // Fullscreen for memory
@@ -2344,6 +2384,7 @@ function applyGameMode() {
   // Init the appropriate game
   switch (state.gameMode) {
     case "spell":
+      renderWordDisplay();
       renderGame(true);
       break;
     case "pattern":
@@ -2896,6 +2937,54 @@ function handleSortTap(bucketCategory) {
 
 // === HEAR & FIND (LISTEN) GAME ===
 
+function clearListenTimers() {
+  clearTimeout(state.listen.speakTimer);
+  clearTimeout(state.listen.replayTimer);
+  clearTimeout(state.listen.advanceTimer);
+  clearTimeout(state.listen.levelUpTimer);
+  clearTimeout(state.listen.completeTimer);
+  state.listen.speakTimer = null;
+  state.listen.replayTimer = null;
+  state.listen.advanceTimer = null;
+  state.listen.levelUpTimer = null;
+  state.listen.completeTimer = null;
+}
+
+function resetListenSession({ preserveLevel = true } = {}) {
+  clearListenTimers();
+  stopSpeech();
+  state.listen.sessionId += 1;
+  state.listen.roundToken += 1;
+  state.listen.targetKey = null;
+  state.listen.choices = [];
+  state.listen.answered = false;
+  state.listen.round = 0;
+  state.listen.correctStreak = 0;
+  state.listen.recentTargets = [];
+  if (!preserveLevel) {
+    state.listen.level = 1;
+  }
+}
+
+function isListenRoundActive(sessionId, roundToken) {
+  return (
+    state.gameMode === "listen" &&
+    !el.gameScreen?.hidden &&
+    state.listen.sessionId === sessionId &&
+    state.listen.roundToken === roundToken
+  );
+}
+
+function getListenTargetEntry() {
+  return WORDS.find((w) => w.key === state.listen.targetKey) || null;
+}
+
+function replayListenTarget() {
+  const entry = getListenTargetEntry();
+  if (!entry || state.gameMode !== "listen") return;
+  return speakText(entry.label, { rate: getTeachingWordRate() });
+}
+
 function renderListenCardArt(entry) {
   const curated = getCuratedPhoto(entry);
   if (curated) {
@@ -2921,6 +3010,11 @@ function getListenChoiceCount() {
 }
 
 function initListenRound() {
+  clearListenTimers();
+  stopSpeech();
+  state.listen.roundToken += 1;
+  const sessionId = state.listen.sessionId;
+  const roundToken = state.listen.roundToken;
   const pool = state.filteredWords.length >= 4 ? state.filteredWords : WORDS;
   const available = pool.filter((w) => !state.listen.recentTargets.includes(w.key));
   const candidates = available.length >= 2 ? available : pool;
@@ -2950,8 +3044,9 @@ function initListenRound() {
   renderListenGame();
 
   // Auto-speak the target word after a short beat
-  setTimeout(() => {
-    speakText(target.label, { rate: getTeachingWordRate() });
+  state.listen.speakTimer = setTimeout(() => {
+    if (!isListenRoundActive(sessionId, roundToken)) return;
+    replayListenTarget();
   }, 400);
 }
 
@@ -2994,9 +3089,13 @@ function renderListenGame() {
 function handleListenChoice(wordKey) {
   if (state.listen.answered) return;
 
+  clearListenTimers();
+  stopSpeech();
   const isCorrect = wordKey === state.listen.targetKey;
   const cardEl = el.listenChoices.querySelector(`[data-word-key="${wordKey}"]`);
-  const targetEntry = WORDS.find((w) => w.key === state.listen.targetKey);
+  const targetEntry = getListenTargetEntry();
+  const sessionId = state.listen.sessionId;
+  const roundToken = state.listen.roundToken;
 
   if (isCorrect) {
     state.listen.answered = true;
@@ -3026,19 +3125,26 @@ function handleListenChoice(wordKey) {
       state.listen.level++;
       state.listen.correctStreak = 0;
       saveToStorage("din-english-garden-listen-level", state.listen.level);
-      setTimeout(() => showToast("Level up!", "success"), 600);
+      state.listen.levelUpTimer = setTimeout(() => {
+        if (!isListenRoundActive(sessionId, roundToken)) return;
+        showToast("Level up!", "success");
+      }, 600);
     }
 
     // Celebration every 5 rounds
     if (state.listen.round % 5 === 0 && targetEntry) {
-      setTimeout(() => {
+      state.listen.completeTimer = setTimeout(() => {
+        if (!isListenRoundActive(sessionId, roundToken)) return;
         playSuccessChime();
         showMascotBubble(randomPhrase("listenComplete"), 3000);
       }, 500);
     }
 
     // Advance after a beat
-    setTimeout(() => initListenRound(), 1200);
+    state.listen.advanceTimer = setTimeout(() => {
+      if (!isListenRoundActive(sessionId, roundToken)) return;
+      initListenRound();
+    }, 1200);
   } else {
     // Wrong — gentle feedback
     playWrongSound();
@@ -3052,7 +3158,8 @@ function handleListenChoice(wordKey) {
     state.listen.correctStreak = 0;
 
     // Replay the target word after a short delay to help
-    setTimeout(() => {
+    state.listen.replayTimer = setTimeout(() => {
+      if (!isListenRoundActive(sessionId, roundToken) || state.listen.answered) return;
       if (targetEntry) speakText(targetEntry.label, { rate: getTeachingWordRate() });
     }, 800);
   }
