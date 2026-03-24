@@ -2283,6 +2283,9 @@ function goHome() {
   el.gameScreen.hidden = true;
   el.homeScreen.hidden = false;
   el.app.classList.remove("fullscreen-game");
+  // Also hide train screen if open
+  const trainScr = document.getElementById("trainScreen");
+  if (trainScr) trainScr.hidden = true;
 }
 
 function openHomeDestination(target) {
@@ -3304,8 +3307,9 @@ const trainState = {
 const trainEl = {};
 
 function cacheTrainElements() {
-  const ids = ["trainScreen", "trainBackBtn", "trainCounter", "trainViewport", "trainTrack",
-    "trainControls", "trainAddBtn", "trainChallenge", "trainChallengePrompt", "trainChallengeOptions"];
+  const ids = ["trainScreen", "trainBackBtn", "trainViewport", "trainTrack",
+    "trainControls", "trainAddBtn", "trainChallenge", "trainChallengePrompt", "trainChallengeOptions",
+    "trainArt", "trainArtNumber", "trainWord"];
   ids.forEach((id) => {
     trainEl[id] = document.getElementById(id);
   });
@@ -3320,8 +3324,11 @@ function openTrainGame() {
   trainState.currentNumber = 0;
   trainState.challengeMode = false;
   trainState.challengeCount = 0;
+  trainEl.trainChallenge.hidden = true;
+  trainEl.trainControls.hidden = false;
   renderTrain();
   updateTrainCounter();
+  updateTrainHero();
 
   // Bind events once
   if (!trainEl._bound) {
@@ -3329,6 +3336,11 @@ function openTrainGame() {
     trainEl.trainBackBtn.addEventListener("click", closeTrainGame);
     trainEl.trainAddBtn.addEventListener("click", handleTrainAdd);
     trainEl.trainTrack.addEventListener("click", handleTrainCarriageTap);
+    trainEl.trainArt.addEventListener("click", () => {
+      if (trainState.currentNumber > 0) {
+        speakNumber(trainState.currentNumber);
+      }
+    });
   }
 }
 
@@ -3341,8 +3353,24 @@ function closeTrainGame() {
 }
 
 function updateTrainCounter() {
-  if (trainEl.trainCounter) {
-    trainEl.trainCounter.textContent = trainState.currentNumber;
+  // Counter removed from UI — kept as no-op for call sites
+}
+
+function updateTrainHero() {
+  if (!trainEl.trainArtNumber) return;
+  const n = trainState.currentNumber;
+  if (n === 0) {
+    trainEl.trainArtNumber.textContent = "";
+    trainEl.trainWord.textContent = "Tap + to start!";
+    trainEl.trainArtNumber.style.color = "var(--text)";
+  } else {
+    trainEl.trainArtNumber.textContent = n;
+    trainEl.trainWord.textContent = numberToEnglish(n);
+    trainEl.trainArtNumber.style.color = getCarriageColor(n);
+    // Pop animation
+    trainEl.trainArtNumber.classList.remove("pop");
+    void trainEl.trainArtNumber.offsetWidth;
+    trainEl.trainArtNumber.classList.add("pop");
   }
 }
 
@@ -3353,7 +3381,7 @@ function renderTrain() {
   // Engine
   const engine = document.createElement("div");
   engine.className = "train-engine";
-  engine.innerHTML = `<div class="engine-wheels"><span class="engine-wheel"></span><span class="engine-wheel"></span><span class="engine-wheel"></span></div>`;
+  engine.innerHTML = `<span class="train-engine-emoji">🚂</span><div class="engine-wheels"><span class="engine-wheel"></span><span class="engine-wheel"></span></div>`;
   track.appendChild(engine);
 
   // Carriages for numbers 1..currentNumber
@@ -3400,6 +3428,7 @@ function addCarriage(n, withAnimation) {
   track.appendChild(carriage);
 
   scrollTrainToEnd();
+  updateTrainHero();
   speakNumber(n);
 
   // Milestone celebrations at 10, 20, 30, etc.
@@ -3409,11 +3438,13 @@ function addCarriage(n, withAnimation) {
 }
 
 function scrollTrainToEnd() {
+  const viewport = trainEl.trainViewport;
+  if (!viewport) return;
+  // Double rAF to ensure DOM has updated
   requestAnimationFrame(() => {
-    const viewport = trainEl.trainViewport;
-    if (viewport) {
-      viewport.scrollLeft = viewport.scrollWidth;
-    }
+    requestAnimationFrame(() => {
+      viewport.scrollTo({ left: viewport.scrollWidth, behavior: "smooth" });
+    });
   });
 }
 
@@ -3459,8 +3490,8 @@ function showTrainChallenge(correctNumber) {
   trainState.challengeCorrectNumber = correctNumber;
 
   // Hide add button, show challenge
-  trainEl.trainControls.hidden = true;
-  trainEl.trainChallenge.hidden = false;
+  if (trainEl.trainControls) trainEl.trainControls.hidden = true;
+  if (trainEl.trainChallenge) trainEl.trainChallenge.hidden = false;
 
   // Generate options: correct + 2 wrong ones
   const options = [correctNumber];
