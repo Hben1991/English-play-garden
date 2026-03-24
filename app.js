@@ -2301,6 +2301,11 @@ function openHomeDestination(target) {
     return;
   }
 
+  if (target === "train") {
+    openTrainGame();
+    return;
+  }
+
   if (target === "pattern" || target === "memory" || target === "sort" || target === "listen") {
     enterGame(target);
     return;
@@ -3257,6 +3262,324 @@ function setupDragDrop(container, draggableSelector, dropTargetSelector, onDrop)
       }
     });
   });
+}
+
+// === NUMBER TRAIN GAME ===
+
+const ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+  "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+
+function numberToEnglish(n) {
+  if (n === 0) return "zero";
+  if (n === 100) return "one hundred";
+  if (n < 20) return ONES[n];
+  const ten = Math.floor(n / 10);
+  const one = n % 10;
+  return one === 0 ? TENS[ten] : TENS[ten] + " " + ONES[one];
+}
+
+const CARRIAGE_COLORS = [
+  "#42A5F5", "#66BB6A", "#FFA726", "#AB47BC", "#EF5350",
+  "#26C6DA", "#FFCA28", "#8D6E63", "#EC407A", "#7E57C2",
+  "#26A69A", "#FF7043", "#5C6BC0", "#9CCC65", "#FF5252",
+];
+
+function getCarriageColor(n) {
+  return CARRIAGE_COLORS[(n - 1) % CARRIAGE_COLORS.length];
+}
+
+const trainState = {
+  currentNumber: 0,
+  highestReached: loadFromStorage("din-english-garden-train-highest", 0),
+  maxNumber: 100,
+  challengeMode: false,
+  challengeCorrectNumber: null,
+  challengeCount: 0,
+  speakingCarriage: null,
+  milestoneTimer: null,
+  addTimer: null,
+};
+
+const trainEl = {};
+
+function cacheTrainElements() {
+  const ids = ["trainScreen", "trainBackBtn", "trainCounter", "trainViewport", "trainTrack",
+    "trainControls", "trainAddBtn", "trainChallenge", "trainChallengePrompt", "trainChallengeOptions"];
+  ids.forEach((id) => {
+    trainEl[id] = document.getElementById(id);
+  });
+}
+
+function openTrainGame() {
+  if (!trainEl.trainScreen) cacheTrainElements();
+  el.homeScreen.hidden = true;
+  trainEl.trainScreen.hidden = false;
+
+  // Resume from saved progress or start fresh
+  trainState.currentNumber = 0;
+  trainState.challengeMode = false;
+  trainState.challengeCount = 0;
+  renderTrain();
+  updateTrainCounter();
+
+  // Bind events once
+  if (!trainEl._bound) {
+    trainEl._bound = true;
+    trainEl.trainBackBtn.addEventListener("click", closeTrainGame);
+    trainEl.trainAddBtn.addEventListener("click", handleTrainAdd);
+    trainEl.trainTrack.addEventListener("click", handleTrainCarriageTap);
+  }
+}
+
+function closeTrainGame() {
+  stopSpeech();
+  clearTimeout(trainState.milestoneTimer);
+  clearTimeout(trainState.addTimer);
+  trainEl.trainScreen.hidden = true;
+  el.homeScreen.hidden = false;
+}
+
+function updateTrainCounter() {
+  if (trainEl.trainCounter) {
+    trainEl.trainCounter.textContent = trainState.currentNumber;
+  }
+}
+
+function renderTrain() {
+  const track = trainEl.trainTrack;
+  track.innerHTML = "";
+
+  // Engine
+  const engine = document.createElement("div");
+  engine.className = "train-engine";
+  engine.innerHTML = `<div class="engine-wheels"><span class="engine-wheel"></span><span class="engine-wheel"></span><span class="engine-wheel"></span></div>`;
+  track.appendChild(engine);
+
+  // Carriages for numbers 1..currentNumber
+  for (let n = 1; n <= trainState.currentNumber; n++) {
+    // Connector
+    const conn = document.createElement("div");
+    conn.className = "train-connector";
+    track.appendChild(conn);
+
+    // Carriage
+    const carriage = document.createElement("div");
+    carriage.className = "train-carriage";
+    carriage.style.background = `linear-gradient(135deg, ${getCarriageColor(n)}, ${getCarriageColor(n)}dd)`;
+    carriage.dataset.number = n;
+    carriage.innerHTML = `
+      <span class="train-carriage-number">${n}</span>
+      <span class="train-carriage-word">${numberToEnglish(n)}</span>
+      <div class="carriage-wheels"><span class="carriage-wheel"></span><span class="carriage-wheel"></span></div>
+    `;
+    track.appendChild(carriage);
+  }
+
+  scrollTrainToEnd();
+}
+
+function addCarriage(n, withAnimation) {
+  const track = trainEl.trainTrack;
+
+  // Connector
+  const conn = document.createElement("div");
+  conn.className = "train-connector";
+  track.appendChild(conn);
+
+  // Carriage
+  const carriage = document.createElement("div");
+  carriage.className = "train-carriage" + (withAnimation ? " animate-in" : "");
+  carriage.style.background = `linear-gradient(135deg, ${getCarriageColor(n)}, ${getCarriageColor(n)}dd)`;
+  carriage.dataset.number = n;
+  carriage.innerHTML = `
+    <span class="train-carriage-number">${n}</span>
+    <span class="train-carriage-word">${numberToEnglish(n)}</span>
+    <div class="carriage-wheels"><span class="carriage-wheel"></span><span class="carriage-wheel"></span></div>
+  `;
+  track.appendChild(carriage);
+
+  scrollTrainToEnd();
+  speakNumber(n);
+
+  // Milestone celebrations at 10, 20, 30, etc.
+  if (n % 10 === 0) {
+    trainState.milestoneTimer = setTimeout(() => showTrainMilestone(n), 1200);
+  }
+}
+
+function scrollTrainToEnd() {
+  requestAnimationFrame(() => {
+    const viewport = trainEl.trainViewport;
+    if (viewport) {
+      viewport.scrollLeft = viewport.scrollWidth;
+    }
+  });
+}
+
+async function speakNumber(n) {
+  const word = numberToEnglish(n);
+  // Highlight the speaking carriage
+  const carriage = trainEl.trainTrack.querySelector(`[data-number="${n}"]`);
+  if (carriage) {
+    carriage.classList.add("speaking");
+    setTimeout(() => carriage.classList.remove("speaking"), 800);
+  }
+
+  playCorrectSound();
+  await speakText(word, { rate: getTeachingWordRate(), preserveSequence: true });
+}
+
+function handleTrainAdd() {
+  if (trainState.currentNumber >= trainState.maxNumber) return;
+  if (trainState.challengeMode) return;
+
+  const nextNumber = trainState.currentNumber + 1;
+
+  // Every 5 numbers (after the child has at least 5), show a challenge
+  if (trainState.currentNumber >= 5 && trainState.challengeCount < trainState.currentNumber &&
+      trainState.currentNumber % 5 === 0) {
+    showTrainChallenge(nextNumber);
+    return;
+  }
+
+  trainState.currentNumber = nextNumber;
+  updateTrainCounter();
+  addCarriage(nextNumber, true);
+
+  // Save highest
+  if (nextNumber > trainState.highestReached) {
+    trainState.highestReached = nextNumber;
+    saveToStorage("din-english-garden-train-highest", nextNumber);
+  }
+}
+
+function showTrainChallenge(correctNumber) {
+  trainState.challengeMode = true;
+  trainState.challengeCorrectNumber = correctNumber;
+
+  // Hide add button, show challenge
+  trainEl.trainControls.hidden = true;
+  trainEl.trainChallenge.hidden = false;
+
+  // Generate options: correct + 2 wrong ones
+  const options = [correctNumber];
+  while (options.length < 3) {
+    const offset = Math.random() < 0.5 ? -1 : 1;
+    let wrong = correctNumber + offset * (Math.floor(Math.random() * 3) + 1);
+    if (wrong < 1) wrong = correctNumber + 2;
+    if (!options.includes(wrong)) options.push(wrong);
+  }
+
+  // Shuffle
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+  }
+
+  trainEl.trainChallengeOptions.innerHTML = options.map((n) => `
+    <button class="train-challenge-option" data-option="${n}" type="button">
+      <span class="option-number">${n}</span>
+      <span class="option-word">${numberToEnglish(n)}</span>
+    </button>
+  `).join("");
+
+  // Speak the question
+  speakText("What comes next?", { rate: getTeachingWordRate() });
+
+  // Bind option clicks
+  trainEl.trainChallengeOptions.querySelectorAll(".train-challenge-option").forEach((btn) => {
+    btn.addEventListener("click", () => handleTrainChallengeAnswer(Number(btn.dataset.option)));
+  });
+}
+
+function handleTrainChallengeAnswer(chosen) {
+  const correct = trainState.challengeCorrectNumber;
+  const options = trainEl.trainChallengeOptions.querySelectorAll(".train-challenge-option");
+
+  if (chosen === correct) {
+    // Correct!
+    options.forEach((btn) => {
+      if (Number(btn.dataset.option) === correct) btn.classList.add("correct");
+    });
+    playCorrectSound();
+    trainState.challengeCount = trainState.currentNumber;
+
+    trainState.addTimer = setTimeout(() => {
+      trainEl.trainChallenge.hidden = true;
+      trainEl.trainControls.hidden = false;
+      trainState.challengeMode = false;
+
+      trainState.currentNumber = correct;
+      updateTrainCounter();
+      addCarriage(correct, true);
+
+      if (correct > trainState.highestReached) {
+        trainState.highestReached = correct;
+        saveToStorage("din-english-garden-train-highest", correct);
+      }
+    }, 800);
+  } else {
+    // Wrong - shake and try again
+    options.forEach((btn) => {
+      if (Number(btn.dataset.option) === chosen) btn.classList.add("wrong");
+    });
+    playWrongSound();
+    setTimeout(() => {
+      options.forEach((btn) => btn.classList.remove("wrong"));
+    }, 500);
+  }
+}
+
+function handleTrainCarriageTap(e) {
+  const carriage = e.target.closest(".train-carriage");
+  if (!carriage) return;
+  const n = Number(carriage.dataset.number);
+  if (n) speakNumber(n);
+}
+
+function showTrainMilestone(n) {
+  const milestones = {
+    10: { emoji: "⭐", text: "10!", sub: "Ten!" },
+    20: { emoji: "🌟", text: "20!", sub: "Twenty!" },
+    30: { emoji: "🎉", text: "30!", sub: "Thirty!" },
+    40: { emoji: "🚀", text: "40!", sub: "Forty!" },
+    50: { emoji: "👑", text: "50!", sub: "Fifty! Halfway there!" },
+    60: { emoji: "🔥", text: "60!", sub: "Sixty!" },
+    70: { emoji: "💎", text: "70!", sub: "Seventy!" },
+    80: { emoji: "🏆", text: "80!", sub: "Eighty!" },
+    90: { emoji: "✨", text: "90!", sub: "Ninety! Almost there!" },
+    100: { emoji: "🎊", text: "100!", sub: "One hundred! Amazing!" },
+  };
+
+  const m = milestones[n];
+  if (!m) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "train-milestone";
+  overlay.innerHTML = `
+    <div class="train-milestone-content">
+      <div class="train-milestone-emoji">${m.emoji}</div>
+      <div class="train-milestone-text">${m.text}</div>
+      <div class="train-milestone-sub">${m.sub}</div>
+    </div>
+  `;
+
+  document.getElementById("app").appendChild(overlay);
+
+  playSuccessChime();
+
+  // Speak the milestone
+  setTimeout(() => {
+    speakText(n === 100 ? "one hundred! Amazing!" : numberToEnglish(n) + "!", { rate: getTeachingWordRate() });
+  }, 400);
+
+  // Auto-dismiss or tap to dismiss
+  const dismiss = () => {
+    if (overlay.parentNode) overlay.remove();
+  };
+  overlay.addEventListener("click", dismiss);
+  setTimeout(dismiss, 3000);
 }
 
 // === START ===
