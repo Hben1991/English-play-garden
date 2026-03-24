@@ -42,6 +42,10 @@
             </span>
             <span class="home-card-label">Words</span>
           </button>
+          <button class="home-card home-card--train" data-home="train">
+            <span class="home-card-icon"><span style="font-size:1.6rem">🚂</span></span>
+            <span class="home-card-label">Count</span>
+          </button>
           <button class="home-card home-card--settings" data-home="settings">
             <span class="home-card-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -142,6 +146,29 @@
         <div class="dots" id="dots" aria-live="polite"></div>
       </footer>
       </div><!-- /game-screen -->
+
+      <!-- NUMBER TRAIN SCREEN -->
+      <section class="train-screen" id="trainScreen" hidden>
+        <header class="train-top-bar">
+          <button class="back-btn" id="trainBackBtn" type="button" aria-label="Back to home">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M15 6L9 12L15 18"/></svg>
+          </button>
+          <div class="train-title">Number Train</div>
+          <div class="train-counter" id="trainCounter">0</div>
+        </header>
+        <div class="train-viewport" id="trainViewport">
+          <div class="train-track" id="trainTrack"></div>
+        </div>
+        <div class="train-controls" id="trainControls">
+          <button class="train-add-btn" id="trainAddBtn" type="button" aria-label="Add next number">
+            <span class="train-add-icon">+</span>
+          </button>
+        </div>
+        <div class="train-challenge" id="trainChallenge" hidden>
+          <div class="train-challenge-prompt" id="trainChallengePrompt">What comes next?</div>
+          <div class="train-challenge-options" id="trainChallengeOptions"></div>
+        </div>
+      </section>
 
       <div class="overlay" id="settingsOverlay" hidden>
         <div class="panel settings-panel">
