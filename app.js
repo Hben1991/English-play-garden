@@ -607,6 +607,7 @@ const CURATED_EMOJI_MAP = {
   head: "👤", face: "🙂", arm: "💪", lip: "👄", chin: "🙂", neck: "🧣", knee: "🦵", back: "🧍",
   foot: "🦶", tooth: "🦷", mouth: "👄", teeth: "😁",
 };
+const engagementUtils = globalThis.EngagementUtils || {};
 
 // === STATE ===
 
@@ -651,6 +652,41 @@ function randomPhrase(category) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+function getHomeRouteConfig(target) {
+  if (typeof engagementUtils.getHomeRoute === "function") {
+    return engagementUtils.getHomeRoute(target);
+  }
+  return null;
+}
+
+function getHomePrimaryActionConfig(target) {
+  if (typeof engagementUtils.getHomePrimaryAction === "function") {
+    return engagementUtils.getHomePrimaryAction(target);
+  }
+  return { key: "spell", label: "Play Letters", href: "#spell" };
+}
+
+function getPracticeCueText(input) {
+  if (typeof engagementUtils.getPracticeCue === "function") {
+    return engagementUtils.getPracticeCue(input);
+  }
+  return { text: "Try it again.", repeat: true, stretch: "repeat" };
+}
+
+function getReplayActionsForEntry(entry) {
+  if (typeof engagementUtils.getReplayActions === "function") {
+    return engagementUtils.getReplayActions(entry);
+  }
+  return [];
+}
+
+function getGameFeedbackConfig(input) {
+  if (typeof engagementUtils.getGameFeedback === "function") {
+    return engagementUtils.getGameFeedback(input);
+  }
+  return { text: "Try again.", tone: "neutral" };
+}
+
 const state = {
   activeCategory: "all",
   filteredWords: [],
@@ -662,7 +698,7 @@ const state = {
   activeVoice: null,
   availableVoices: [],
   speechRate: loadFromStorage("din-english-garden-speed", 75) / 100,
-  autoAdvance: loadFromStorage("din-english-garden-auto", true),
+  autoAdvance: loadFromStorage("din-english-garden-auto", false),
   useLowercaseText: loadFromStorage("din-english-garden-lowercase", false),
   useRealPhotos: loadFromStorage(REAL_PHOTOS_STORAGE_KEY, false),
   currentAudio: null,
@@ -679,6 +715,7 @@ const state = {
   celebrationTimer: null,
   completionSpeechTimer: null,
   completionSoundTimer: null,
+  confettiTimer: null,
   autoAdvanceTimer: null,
   welcomeTimer: null,
   navigatePromptTimer: null,
@@ -689,15 +726,43 @@ const state = {
   // Game mode
   gameMode: loadFromStorage("din-english-garden-gamemode", "spell"),
   viewMode: "grid",
+  homeTarget: loadFromStorage("din-english-garden-home-target", "spell"),
 
   // Pattern game state
-  pattern: { sequence: [], options: [], correctKey: null, round: 0, level: loadFromStorage("din-english-garden-pattern-level", 1), roundsAtLevel: 0 },
+  pattern: {
+    sequence: [],
+    options: [],
+    correctKey: null,
+    round: 0,
+    level: loadFromStorage("din-english-garden-pattern-level", 1),
+    roundsAtLevel: 0,
+    feedback: { phase: "idle", wrongKey: null, hintedKey: null },
+    feedbackTimer: null,
+  },
 
   // Memory game state
-  memory: { cards: [], flippedIds: [], matched: 0, moves: 0, lockBoard: false, level: loadFromStorage("din-english-garden-memory-level", 1) },
+  memory: {
+    cards: [],
+    flippedIds: [],
+    matched: 0,
+    moves: 0,
+    lockBoard: false,
+    level: loadFromStorage("din-english-garden-memory-level", 1),
+    feedback: { phase: "idle", mismatchIds: [] },
+    feedbackTimer: null,
+    resolveTimer: null,
+  },
 
   // Sort game state
-  sort: { currentItem: null, buckets: [], queue: [], correct: 0, total: 0 },
+  sort: {
+    currentItem: null,
+    buckets: [],
+    queue: [],
+    correct: 0,
+    total: 0,
+    feedback: { phase: "idle", wrongCategory: null, hintedCategory: null, bucketLabel: "" },
+    feedbackTimer: null,
+  },
 
   // Listen game state
   listen: {
@@ -715,6 +780,8 @@ const state = {
     advanceTimer: null,
     levelUpTimer: null,
     completeTimer: null,
+    feedback: { phase: "idle", wrongKey: null, hintedKey: null, replayHint: false },
+    feedbackTimer: null,
   },
 };
 
@@ -725,13 +792,16 @@ const el = {};
 function cacheElements() {
   const ids = [
     "homeScreen", "gameScreen", "backBtn",
+    "homeProgress", "homePrimaryAction",
     "categories", "settingsBtn", "viewToggle", "caseToggleBtn", "prevBtn", "nextBtn",
     "wordDisplay", "artContainer", "wordTitle", "wordFacts",
     "gridView", "wordGrid", "stageView",
-    "slots", "tiles", "dots", "bottomBar",
+    "slots", "tiles", "dots", "bottomBar", "gameStatus", "playCue", "replayRow",
     "gameModes", "gameArea", "spellGame", "patternGame", "memoryGame", "sortGame", "listenGame",
-    "patternSequence", "patternOptions", "memoryBoard", "sortItem", "sortBuckets",
-    "listenPrompt", "listenReplay", "listenChoices", "listenProgress",
+    "patternStatus", "patternSequence", "patternOptions",
+    "memoryStatus", "memoryBoard",
+    "sortStatus", "sortItem", "sortBuckets",
+    "listenPrompt", "listenReplay", "listenStatus", "listenChoices", "listenProgress",
     "settingsOverlay", "speedSlider", "speedLabel",
     "voiceSelect", "autoAdvance", "autoAdvanceSetting", "photoMode", "photoModeSetting", "resetProgress", "closeSettings",
     "celebrationOverlay", "celebrationStar", "celebrationWord", "celebrationPhrase",
@@ -762,6 +832,8 @@ function init() {
   setCurrentWord(0);
   renderCategories();
   renderDots();
+  renderHomeProgress();
+  renderHomePrimaryAction();
   applyGameMode();
   applyViewMode();
   el.homeScreen.hidden = false;
@@ -779,6 +851,11 @@ function bindEvents() {
       openHomeDestination(card.dataset.home);
     });
   });
+  if (el.homePrimaryAction) {
+    el.homePrimaryAction.addEventListener("click", () => {
+      openHomeDestination(state.homeTarget || "spell");
+    });
+  }
   if (el.backBtn) {
     el.backBtn.addEventListener("click", goHome);
   }
@@ -1180,6 +1257,39 @@ function renderWordFacts(entry = currentEntry()) {
   )).join("");
 }
 
+function renderHomeProgress() {
+  if (!el.homeProgress) return;
+  const learnedCount = state.earnedWords.length;
+  const streakLabel = state.streak > 1 ? ` · ${state.streak} in a row` : "";
+  el.homeProgress.textContent = learnedCount > 0
+    ? `Learned ${learnedCount} words${streakLabel}`
+    : "Start with one favorite game";
+}
+
+function renderHomePrimaryAction() {
+  if (!el.homePrimaryAction) return;
+
+  const action = getHomePrimaryActionConfig(state.homeTarget);
+  const details = {
+    spell: { icon: "✨", sub: "letters first" },
+    count: { icon: "🔢", sub: "1 2 3 play" },
+    pattern: { icon: "🧩", sub: "same + next" },
+    listen: { icon: "🔊", sub: "hear and tap" },
+    browse: { icon: "🌈", sub: "see more words" },
+  };
+  const detail = details[action?.key] || details.spell;
+  el.homePrimaryAction.dataset.target = action?.key || "spell";
+  el.homePrimaryAction.setAttribute("aria-label", action?.label || "Play letters now");
+  el.homePrimaryAction.innerHTML = `
+    <span class="home-primary-icon" aria-hidden="true">${detail.icon}</span>
+    <span class="home-primary-copy">
+      <span class="home-primary-overline">Start Here</span>
+      <span class="home-primary-label">${action?.label || "Play Letters"}</span>
+      <span class="home-primary-sub">${detail.sub}</span>
+    </span>
+  `;
+}
+
 // === GAME ===
 
 function resetPlacements() {
@@ -1222,6 +1332,8 @@ function createDistractorTiles(entry) {
 
 function renderGame(animate) {
   renderGameStatus();
+  renderPracticeCue();
+  renderReplayRow();
   renderSlots();
   renderTiles();
   if (animate && state.viewMode !== "grid") {
@@ -1231,6 +1343,71 @@ function renderGame(animate) {
   // Setup drag & drop for spell tiles
   if (el.spellGame && state.gameMode === "spell") {
     setupSpellDragDrop();
+  }
+}
+
+function renderPracticeCue() {
+  if (!el.playCue) return;
+  const entry = currentEntry();
+  const placedCount = state.placed.filter(Boolean).length;
+
+  if (state.gameMode !== "spell") {
+    el.playCue.textContent = "";
+    return;
+  }
+
+  if (entry && placedCount === entry.word.length) {
+    el.playCue.textContent = "";
+    return;
+  }
+
+  if (entry && placedCount === 0) {
+    el.playCue.textContent = state.activeCategory === "numbers"
+      ? "Count, then tap."
+      : "Tap the first letter.";
+    return;
+  }
+
+  el.playCue.textContent = "";
+}
+
+function renderReplayRow() {
+  if (!el.replayRow) return;
+  const entry = currentEntry();
+  if (!entry || state.gameMode !== "spell") {
+    el.replayRow.innerHTML = "";
+    return;
+  }
+
+  const actions = getReplayActionsForEntry(entry);
+  const primaryAction = actions[0];
+  el.replayRow.innerHTML = "";
+  if (!primaryAction) return;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "replay-btn is-primary";
+  button.innerHTML = `<span aria-hidden="true">🔊</span><span>Again</span>`;
+  button.dataset.action = primaryAction.key;
+  button.setAttribute("aria-label", "Hear again");
+  button.addEventListener("click", () => handleReplayAction(primaryAction.key));
+  el.replayRow.appendChild(button);
+}
+
+function handleReplayAction(actionKey) {
+  switch (actionKey) {
+    case "hear-word":
+      speakWordOnly();
+      break;
+    case "hear-letters":
+      speakLettersOnly();
+      break;
+    case "hear-sound":
+      speakEntrySound();
+      break;
+    default:
+      speakCurrentWord();
+      break;
   }
 }
 
@@ -1336,7 +1513,7 @@ function renderSlots() {
       slot.classList.add("filled");
       slot.innerHTML = `<span class="slot-letter">${formatDisplayText(tile ? tile.letter : letter)}</span>`;
     } else {
-      slot.textContent = formatDisplayText(letter);
+      slot.setAttribute("aria-label", `Letter slot ${i + 1} of ${entry.word.length}`);
       if (i === firstEmpty) {
         slot.classList.add("active");
       }
@@ -1369,9 +1546,9 @@ function renderGameStatus() {
   const entry = currentEntry();
   if (!el.gameStatus || !entry) return;
   const placedCount = state.placed.filter(Boolean).length;
-  const distractorCount = state.tilePool.filter((tile) => tile.isBonus).length;
-  const challengeText = distractorCount > 0 ? `  •  ${distractorCount} bonus letter${distractorCount > 1 ? "s" : ""}` : "";
-  el.gameStatus.textContent = `${placedCount} / ${entry.word.length} letters${challengeText}`;
+  el.gameStatus.textContent = state.activeCategory === "numbers"
+    ? `${placedCount}/${entry.word.length} · ${entry.numberValue || entry.label}`
+    : `${placedCount}/${entry.word.length}`;
 }
 
 function handleTileTap(tile) {
@@ -1388,6 +1565,7 @@ function handleTileTap(tile) {
     renderGame();
     animateSlotsFill(firstEmpty);
     playCorrectSound();
+    speakText(tile.letter.toLowerCase(), { rate: getTeachingLetterRate() });
 
     // Show encouragement on some correct taps
     if (Math.random() < 0.35) {
@@ -1404,6 +1582,7 @@ function handleTileTap(tile) {
     shakeTile(tile.id);
     animateMascotReaction("sad");
     state.streak = 0;
+    renderHomeProgress();
   }
 }
 
@@ -1432,6 +1611,7 @@ function completeWord() {
   }
 
   renderDots();
+  renderHomeProgress();
   showCelebration(entry);
   playSuccessChime();
 
@@ -1472,13 +1652,14 @@ function showCelebration(entry) {
   el.celebrationPhrase.style.opacity = "1";
   el.celebrationWord.textContent = formatDisplayText(entry.word);
   el.celebrationOverlay.hidden = false;
-  spawnConfetti();
   animateCelebration();
+  clearTimeout(state.confettiTimer);
+  state.confettiTimer = setTimeout(() => spawnConfetti(), 120);
 
   state.celebrationTimer = setTimeout(() => {
     if (typeof gsap !== "undefined") {
       gsap.to(el.celebrationOverlay, {
-        opacity: 0, duration: 0.3, onComplete: () => {
+        opacity: 0, duration: 0.24, ease: "power2.in", onComplete: () => {
           hideCelebration();
           if (state.autoAdvance) {
             clearTimeout(state.autoAdvanceTimer);
@@ -1500,8 +1681,10 @@ function showCelebration(entry) {
 function hideCelebration() {
   clearTimeout(state.celebrationTimer);
   clearTimeout(state.autoAdvanceTimer);
+  clearTimeout(state.confettiTimer);
   state.celebrationTimer = null;
   state.autoAdvanceTimer = null;
+  state.confettiTimer = null;
   if (!el.celebrationOverlay) return;
   el.celebrationOverlay.hidden = true;
   el.celebrationOverlay.style.opacity = "1";
@@ -1613,21 +1796,8 @@ function renderGrid() {
     card.innerHTML = `${star}<div class="grid-art">${gridArt}</div><span class="grid-word">${formatDisplayText(entry.word)}</span>${tag}`;
 
     card.addEventListener("click", () => {
-      setCurrentWord(index);
-      speakCurrentWord();
       playTone(660, 0.06, 0.06);
-    });
-
-    // Double-tap to enter game mode
-    let lastTap = 0;
-    card.addEventListener("pointerup", () => {
-      const now = Date.now();
-      if (now - lastTap < 400) {
-        state.viewMode = "card";
-        saveToStorage(VIEW_MODE_STORAGE_KEY, "card");
-        applyViewMode(true);
-      }
-      lastTap = now;
+      switchToCardView(index);
     });
 
     el.wordGrid.appendChild(card);
@@ -1755,6 +1925,21 @@ async function speakWordOnly() {
   return sequenceId;
 }
 
+async function speakLettersOnly() {
+  const entry = currentEntry();
+  if (!entry) return;
+  const sequenceId = startSpeechSequence();
+  await spellWord(entry.word, sequenceId);
+}
+
+async function speakEntrySound() {
+  const entry = currentEntry();
+  if (!entry?.sound) return;
+  const sequenceId = startSpeechSequence();
+  await speakText(entry.sound, { rate: 1, preserveSequence: true });
+  return sequenceId;
+}
+
 async function speakWordInsight() {
   const entry = currentEntry();
   if (!entry) return;
@@ -1785,7 +1970,7 @@ async function spellWord(word, sequenceId = state.speechSequenceId) {
       preserveSequence: true,
     });
     if (i < letters.length - 1) {
-      await wait(700);
+      await wait(460);
     }
   }
   setSpellingFocus(-1);
@@ -1953,6 +2138,14 @@ function closeSettings() {
 function resetProgress() {
   state.earnedWords = [];
   saveToStorage("din-english-garden-earned", []);
+  clearPatternFeedbackTimer();
+  clearMemoryFeedbackTimer();
+  clearSortFeedbackTimer();
+  clearListenFeedbackTimer();
+  state.pattern.feedback = { phase: "idle", wrongKey: null, hintedKey: null };
+  state.memory.feedback = { phase: "idle", mismatchIds: [] };
+  state.sort.feedback = { phase: "idle", wrongCategory: null, hintedCategory: null, bucketLabel: "" };
+  state.listen.feedback = { phase: "idle", wrongKey: null, hintedKey: null, replayHint: false };
   state.pattern.level = 1;
   state.pattern.roundsAtLevel = 0;
   saveToStorage("din-english-garden-pattern-level", 1);
@@ -1962,7 +2155,12 @@ function resetProgress() {
   saveToStorage("din-english-garden-listen-level", 1);
   state.sort.correct = 0;
   state.sort.total = 0;
+  if (state.gameMode === "pattern") renderPatternGame();
+  if (state.gameMode === "memory") renderMemoryBoard();
+  if (state.gameMode === "sort") renderSortGame();
+  if (state.gameMode === "listen") renderListenGame();
   renderDots();
+  renderHomeProgress();
   if (state.viewMode === "grid") renderGrid();
   showToast("Progress reset", "");
   closeSettings();
@@ -2122,9 +2320,9 @@ function animateWordTransition(direction) {
   const xOut = direction > 0 ? -60 : 60;
   const xIn = direction > 0 ? 60 : -60;
 
-  tl.to(el.wordDisplay, { x: xOut, opacity: 0, scale: 0.9, duration: 0.2, ease: "power2.in" })
+  tl.to(el.wordDisplay, { x: xOut, opacity: 0, scale: 0.94, duration: 0.12, ease: "power2.in" })
     .set(el.wordDisplay, { x: xIn })
-    .to(el.wordDisplay, { x: 0, opacity: 1, scale: 1, duration: 0.35, ease: "back.out(1.4)" });
+    .to(el.wordDisplay, { x: 0, opacity: 1, scale: 1, duration: 0.16, ease: "power3.out" });
 }
 
 function animateArtBounce() {
@@ -2175,15 +2373,31 @@ function animateCelebration() {
   const octopus = document.querySelector(".celebration-octopus");
   const robot = document.querySelector(".celebration-robot");
 
-  tl.from(octopus, { x: -80, opacity: 0, rotation: -20, duration: 0.5, ease: "back.out(1.7)" })
-    .from(robot, { x: 80, opacity: 0, rotation: 20, duration: 0.5, ease: "back.out(1.7)" }, "-=0.35")
-    .from(el.celebrationStar, { scale: 0, rotation: -360, duration: 0.6, ease: "back.out(2)" }, "-=0.3")
-    .from(el.celebrationPhrase, { y: 30, opacity: 0, duration: 0.35, ease: "power2.out" }, "-=0.2")
-    .from(el.celebrationWord, { scale: 0.5, opacity: 0, duration: 0.4, ease: "elastic.out(1, 0.5)" }, "-=0.15");
-
-  // Mascots bounce happily
-  gsap.to(octopus, { y: -6, duration: 0.3, ease: "power1.inOut", yoyo: true, repeat: 4, delay: 0.8 });
-  gsap.to(robot, { y: -6, duration: 0.3, ease: "power1.inOut", yoyo: true, repeat: 4, delay: 1 });
+  tl.from([octopus, robot], {
+    y: 18,
+    opacity: 0,
+    duration: 0.22,
+    ease: "power2.out",
+    stagger: 0.04,
+  })
+    .from(el.celebrationStar, {
+      scale: 0.82,
+      opacity: 0,
+      duration: 0.18,
+      ease: "power2.out",
+    }, "-=0.08")
+    .from(el.celebrationPhrase, {
+      y: 18,
+      opacity: 0,
+      duration: 0.18,
+      ease: "power2.out",
+    }, "-=0.02")
+    .from(el.celebrationWord, {
+      scale: 0.92,
+      opacity: 0,
+      duration: 0.2,
+      ease: "back.out(1.5)",
+    }, "-=0.02");
 }
 
 function animateGridCards() {
@@ -2235,7 +2449,7 @@ function showMascotBubble(text, duration) {
   if (typeof gsap !== "undefined") {
     gsap.to(el.mascotBubble, { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "back.out(1.7)" });
     state.mascotTimer = setTimeout(() => {
-      gsap.to(el.mascotBubble, { opacity: 0, scale: 0.8, y: 8, duration: 0.2 });
+      gsap.to(el.mascotBubble, { opacity: 0, scale: 0.8, y: 8, duration: 0.18, ease: "power2.in" });
     }, duration || 2500);
   } else {
     el.mascotBubble.style.opacity = "1";
@@ -2272,7 +2486,8 @@ function enterGame(mode) {
   selectGameMode(mode);
   // If returning to spell in grid mode, make sure grid mode reflects
   if (mode === "spell" && state.viewMode !== "grid") {
-    renderWord();
+    renderWordDisplay();
+    renderGame(true);
   }
 }
 
@@ -2283,14 +2498,29 @@ function goHome() {
   el.gameScreen.hidden = true;
   el.homeScreen.hidden = false;
   el.app.classList.remove("fullscreen-game");
+  renderHomePrimaryAction();
+  renderHomeProgress();
   // Also hide train screen if open
   const trainScr = document.getElementById("trainScreen");
   if (trainScr) trainScr.hidden = true;
 }
 
 function openHomeDestination(target) {
+  const route = getHomeRouteConfig(target);
+
   if (target === "settings") {
     openSettings();
+    return;
+  }
+
+  if (route?.key) {
+    state.homeTarget = route.key;
+    saveToStorage("din-english-garden-home-target", state.homeTarget);
+    renderHomePrimaryAction();
+  }
+
+  if (route?.key === "count" || target === "train") {
+    openTrainGame();
     return;
   }
 
@@ -2298,14 +2528,10 @@ function openHomeDestination(target) {
     state.viewMode = "card";
     saveToStorage(VIEW_MODE_STORAGE_KEY, state.viewMode);
     refreshLearnOrder();
+    refreshGridOrder();
     setCurrentWord(0);
     enterGame("spell");
     applyViewMode();
-    return;
-  }
-
-  if (target === "train") {
-    openTrainGame();
     return;
   }
 
@@ -2412,6 +2638,114 @@ function applyGameMode() {
 
 // === PATTERN MATCH GAME ===
 
+function applyMiniGameStatus(element, feedback) {
+  if (!element) return;
+  const nextFeedback = feedback || { text: "", tone: "neutral" };
+  element.dataset.tone = nextFeedback.tone || "neutral";
+  const nextText = nextFeedback.text || "";
+  element.classList.toggle("is-visible", Boolean(nextText) && nextFeedback.tone === "hint");
+  if (element.textContent === nextText && nextText) {
+    element.textContent = "";
+    requestAnimationFrame(() => {
+      element.textContent = nextText;
+    });
+    return;
+  }
+  element.textContent = nextText;
+}
+
+function clearPatternFeedbackTimer() {
+  clearTimeout(state.pattern.feedbackTimer);
+  state.pattern.feedbackTimer = null;
+}
+
+function setPatternFeedback(feedback, persistMs = 0) {
+  clearPatternFeedbackTimer();
+  state.pattern.feedback = {
+    phase: "idle",
+    wrongKey: null,
+    hintedKey: null,
+    ...(feedback || {}),
+  };
+  renderPatternGame();
+
+  if (persistMs > 0) {
+    const round = state.pattern.round;
+    state.pattern.feedbackTimer = setTimeout(() => {
+      if (state.gameMode !== "pattern" || state.pattern.round !== round) return;
+      state.pattern.feedback = { phase: "idle", wrongKey: null, hintedKey: null };
+      renderPatternGame();
+    }, persistMs);
+  }
+}
+
+function clearMemoryFeedbackTimer() {
+  clearTimeout(state.memory.feedbackTimer);
+  clearTimeout(state.memory.resolveTimer);
+  state.memory.feedbackTimer = null;
+  state.memory.resolveTimer = null;
+}
+
+function renderMemoryStatus() {
+  applyMiniGameStatus(el.memoryStatus, getGameFeedbackConfig({
+    mode: "memory",
+    phase: state.memory.feedback.phase,
+  }));
+}
+
+function clearSortFeedbackTimer() {
+  clearTimeout(state.sort.feedbackTimer);
+  state.sort.feedbackTimer = null;
+}
+
+function setSortFeedback(feedback, persistMs = 0) {
+  clearSortFeedbackTimer();
+  state.sort.feedback = {
+    phase: "idle",
+    wrongCategory: null,
+    hintedCategory: null,
+    bucketLabel: "",
+    ...(feedback || {}),
+  };
+  renderSortGame();
+
+  if (persistMs > 0) {
+    const currentKey = state.sort.currentItem?.key || "";
+    state.sort.feedbackTimer = setTimeout(() => {
+      if (state.gameMode !== "sort" || (state.sort.currentItem?.key || "") !== currentKey) return;
+      state.sort.feedback = { phase: "idle", wrongCategory: null, hintedCategory: null, bucketLabel: "" };
+      renderSortGame();
+    }, persistMs);
+  }
+}
+
+function clearListenFeedbackTimer() {
+  clearTimeout(state.listen.feedbackTimer);
+  state.listen.feedbackTimer = null;
+}
+
+function setListenFeedback(feedback, persistMs = 0) {
+  clearListenFeedbackTimer();
+  state.listen.feedback = {
+    phase: "idle",
+    wrongKey: null,
+    hintedKey: null,
+    replayHint: false,
+    ...(feedback || {}),
+  };
+  renderListenGame();
+
+  if (persistMs > 0) {
+    const sessionId = state.listen.sessionId;
+    const roundToken = state.listen.roundToken;
+    state.listen.feedbackTimer = setTimeout(() => {
+      if (!isListenRoundActive(sessionId, roundToken) || state.listen.answered) return;
+      state.listen.feedback = { phase: "idle", wrongKey: null, hintedKey: null, replayHint: false };
+      renderListenGame();
+    }, persistMs);
+  }
+}
+
 function getPatternType(level) {
   // Level 1: AB, Level 2: AB (longer), Level 3: ABC, Level 4: AAB/ABB, Level 5: AABB
   switch (level) {
@@ -2424,6 +2758,8 @@ function getPatternType(level) {
 }
 
 function initPatternRound() {
+  clearPatternFeedbackTimer();
+  state.pattern.feedback = { phase: "idle", wrongKey: null, hintedKey: null };
   const words = state.filteredWords.length >= 3 ? state.filteredWords : WORDS;
   const patternType = getPatternType(state.pattern.level);
 
@@ -2491,6 +2827,11 @@ function initPatternRound() {
 function renderPatternGame() {
   if (!el.patternSequence || !el.patternOptions) return;
 
+  applyMiniGameStatus(el.patternStatus, getGameFeedbackConfig({
+    mode: "pattern",
+    phase: state.pattern.feedback.phase,
+  }));
+
   // Round counter
   const roundLabel = `Round ${state.pattern.round + 1}`;
 
@@ -2500,6 +2841,9 @@ function renderPatternGame() {
     const div = document.createElement("div");
     if (wordKey === null) {
       div.className = "pattern-item mystery";
+      if (state.pattern.feedback.hintedKey) {
+        div.classList.add("next-target");
+      }
       div.textContent = "?";
       div.dataset.index = i;
     } else {
@@ -2524,6 +2868,12 @@ function renderPatternGame() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "pattern-option";
+    if (state.pattern.feedback.hintedKey === wordKey) {
+      btn.classList.add("hinted");
+    }
+    if (state.pattern.feedback.wrongKey === wordKey) {
+      btn.classList.add("wrong", "wrong-soft");
+    }
     btn.innerHTML = entry.art;
     btn.addEventListener("click", () => handlePatternChoice(wordKey));
     el.patternOptions.appendChild(btn);
@@ -2532,6 +2882,17 @@ function renderPatternGame() {
 
 function handlePatternChoice(wordKey) {
   if (wordKey === state.pattern.correctKey) {
+    clearPatternFeedbackTimer();
+    state.pattern.feedback = { phase: "correct", wrongKey: null, hintedKey: null };
+    applyMiniGameStatus(el.patternStatus, getGameFeedbackConfig({
+      mode: "pattern",
+      phase: "correct",
+    }));
+    el.patternSequence.querySelector(".mystery")?.classList.remove("next-target");
+    el.patternOptions.querySelectorAll(".pattern-option").forEach((opt) => {
+      opt.classList.remove("hinted", "wrong", "wrong-soft");
+    });
+
     // Correct! Animate the answer into place
     const mystery = el.patternSequence.querySelector(".mystery");
     if (mystery) {
@@ -2591,21 +2952,19 @@ function handlePatternChoice(wordKey) {
   } else {
     // Wrong
     playWrongSound();
-    const opts = el.patternOptions.querySelectorAll(".pattern-option");
-    opts.forEach((opt) => {
-      const entry = WORDS.find((w) => w.key === wordKey);
-      if (entry && opt.innerHTML === entry.art) {
-        opt.classList.add("wrong");
-        opt.addEventListener("animationend", () => opt.classList.remove("wrong"), { once: true });
-      }
-    });
     animateMascotReaction("sad");
+    setPatternFeedback({
+      phase: "wrong",
+      wrongKey: wordKey,
+      hintedKey: state.pattern.correctKey,
+    }, 1800);
   }
 }
 
 // === MEMORY PAIRS GAME ===
 
 function initMemoryGame() {
+  clearMemoryFeedbackTimer();
   const words = state.filteredWords.length >= 6 ? state.filteredWords : WORDS;
   const level = state.memory.level;
 
@@ -2629,12 +2988,14 @@ function initMemoryGame() {
   state.memory.matched = 0;
   state.memory.moves = 0;
   state.memory.lockBoard = false;
+  state.memory.feedback = { phase: "idle", mismatchIds: [] };
 
   renderMemoryBoard();
 }
 
 function renderMemoryBoard() {
   if (!el.memoryBoard) return;
+  renderMemoryStatus();
   el.memoryBoard.innerHTML = "";
 
   const totalCards = state.memory.cards.length;
@@ -2648,6 +3009,9 @@ function renderMemoryBoard() {
     cardEl.className = "memory-card";
     if (card.flipped) cardEl.classList.add("flipped");
     if (card.matched) cardEl.classList.add("matched");
+    if (state.memory.feedback.mismatchIds.includes(card.id)) {
+      cardEl.classList.add("mismatch");
+    }
     cardEl.dataset.cardId = card.id;
 
     const entry = WORDS.find((w) => w.key === card.wordKey);
@@ -2701,6 +3065,8 @@ function handleCardFlip(cardId) {
       card1.matched = true;
       card2.matched = true;
       state.memory.matched++;
+      state.memory.feedback = { phase: "correct", mismatchIds: [] };
+      renderMemoryStatus();
 
       setTimeout(() => {
         const el1 = el.memoryBoard.querySelector(`[data-card-id="${id1}"]`);
@@ -2716,12 +3082,18 @@ function handleCardFlip(cardId) {
         const entry = WORDS.find((w) => w.key === card1.wordKey);
         if (entry) speakText(entry.label, { rate: getTeachingWordRate() });
 
+        const totalPairs = state.memory.cards.length / 2;
+        const isComplete = state.memory.matched >= totalPairs;
+        if (!isComplete) {
+          state.memory.feedback = { phase: "idle", mismatchIds: [] };
+          renderMemoryStatus();
+        }
+
         state.memory.flippedIds = [];
         state.memory.lockBoard = false;
 
         // Check for completion
-        const totalPairs = state.memory.cards.length / 2;
-        if (state.memory.matched >= totalPairs) {
+        if (isComplete) {
           setTimeout(() => {
             if (entry) showCelebration(entry);
             playSuccessChime();
@@ -2740,17 +3112,31 @@ function handleCardFlip(cardId) {
       }, 400);
     } else {
       // No match - flip back after delay
-      setTimeout(() => {
+      clearMemoryFeedbackTimer();
+      state.memory.feedback = { phase: "mismatch", mismatchIds: [id1, id2] };
+      renderMemoryStatus();
+      const mismatchEls = state.memory.feedback.mismatchIds
+        .map((id) => el.memoryBoard.querySelector(`[data-card-id="${id}"]`))
+        .filter(Boolean);
+      mismatchEls.forEach((node) => node.classList.add("mismatch"));
+
+      state.memory.resolveTimer = setTimeout(() => {
         card1.flipped = false;
         card2.flipped = false;
         const el1 = el.memoryBoard.querySelector(`[data-card-id="${id1}"]`);
         const el2 = el.memoryBoard.querySelector(`[data-card-id="${id2}"]`);
         if (el1) el1.classList.remove("flipped");
         if (el2) el2.classList.remove("flipped");
+        if (el1) el1.classList.remove("mismatch");
+        if (el2) el2.classList.remove("mismatch");
 
+        clearMemoryFeedbackTimer();
+        state.memory.feedback = { phase: "idle", mismatchIds: [] };
+        renderMemoryStatus();
         state.memory.flippedIds = [];
         state.memory.lockBoard = false;
-      }, 1000);
+        state.memory.resolveTimer = null;
+      }, 1800);
     }
   }
 }
@@ -2758,6 +3144,7 @@ function handleCardFlip(cardId) {
 // === CATEGORY SORT GAME ===
 
 function initSortGame() {
+  clearSortFeedbackTimer();
   const words = state.filteredWords.length >= 6 ? state.filteredWords : WORDS;
 
   // Determine available categories from the words
@@ -2793,11 +3180,13 @@ function initSortGame() {
   state.sort.correct = 0;
   state.sort.total = queue.length;
   state.sort.currentItem = state.sort.queue.shift() || null;
+  state.sort.feedback = { phase: "idle", wrongCategory: null, hintedCategory: null, bucketLabel: "" };
 
   renderSortGame();
 }
 
 function initSortGameFallback() {
+  clearSortFeedbackTimer();
   // Use all words, pick random categories
   const catMap = {};
   WORDS.forEach((w) => {
@@ -2824,12 +3213,18 @@ function initSortGameFallback() {
   state.sort.correct = 0;
   state.sort.total = queue.length;
   state.sort.currentItem = state.sort.queue.shift() || null;
+  state.sort.feedback = { phase: "idle", wrongCategory: null, hintedCategory: null, bucketLabel: "" };
 
   renderSortGame();
 }
 
 function renderSortGame() {
   if (!el.sortItem || !el.sortBuckets) return;
+  applyMiniGameStatus(el.sortStatus, getGameFeedbackConfig({
+    mode: "sort",
+    phase: state.sort.feedback.phase,
+    bucketLabel: state.sort.feedback.bucketLabel,
+  }));
 
   // Render current item
   el.sortItem.innerHTML = "";
@@ -2861,6 +3256,12 @@ function renderSortGame() {
     const bucketEl = document.createElement("button");
     bucketEl.type = "button";
     bucketEl.className = "sort-bucket";
+    if (state.sort.feedback.hintedCategory === bucket.category) {
+      bucketEl.classList.add("hinted", "next-target");
+    }
+    if (state.sort.feedback.wrongCategory === bucket.category) {
+      bucketEl.classList.add("wrong", "wrong-soft");
+    }
     bucketEl.dataset.category = bucket.category;
     bucketEl.dataset.dropTarget = "sort-bucket";
     bucketEl.innerHTML = `
@@ -2895,6 +3296,9 @@ function handleSortTap(bucketCategory) {
   const bucketEl = el.sortBuckets.querySelector(`[data-category="${bucketCategory}"]`);
 
   if (isCorrect) {
+    clearSortFeedbackTimer();
+    state.sort.feedback = { phase: "correct", wrongCategory: null, hintedCategory: null, bucketLabel: "" };
+
     // Correct!
     const bucket = state.sort.buckets.find((b) => b.category === bucketCategory);
     if (bucket) bucket.items.push(entry);
@@ -2914,6 +3318,9 @@ function handleSortTap(bucketCategory) {
 
     // Advance queue
     state.sort.currentItem = state.sort.queue.shift() || null;
+    if (state.sort.currentItem) {
+      state.sort.feedback = { phase: "idle", wrongCategory: null, hintedCategory: null, bucketLabel: "" };
+    }
 
     if (!state.sort.currentItem) {
       // All done!
@@ -2929,17 +3336,15 @@ function handleSortTap(bucketCategory) {
   } else {
     // Wrong
     playWrongSound();
-    if (bucketEl) {
-      bucketEl.classList.add("wrong");
-      bucketEl.addEventListener("animationend", () => bucketEl.classList.remove("wrong"), { once: true });
-    }
     animateMascotReaction("sad");
 
-    // Show hint
     const correctCat = CATEGORIES.find((c) => c.key === entry.category);
-    if (correctCat) {
-      showToast(`Hint: ${correctCat.icon} ${correctCat.label}`, "warning");
-    }
+    setSortFeedback({
+      phase: "wrong",
+      wrongCategory: bucketCategory,
+      hintedCategory: entry.category,
+      bucketLabel: correctCat?.label || "",
+    }, 1800);
   }
 }
 
@@ -2960,6 +3365,7 @@ function clearListenTimers() {
 
 function resetListenSession({ preserveLevel = true } = {}) {
   clearListenTimers();
+  clearListenFeedbackTimer();
   stopSpeech();
   state.listen.sessionId += 1;
   state.listen.roundToken += 1;
@@ -2969,6 +3375,7 @@ function resetListenSession({ preserveLevel = true } = {}) {
   state.listen.round = 0;
   state.listen.correctStreak = 0;
   state.listen.recentTargets = [];
+  state.listen.feedback = { phase: "idle", wrongKey: null, hintedKey: null, replayHint: false };
   if (!preserveLevel) {
     state.listen.level = 1;
   }
@@ -3019,6 +3426,7 @@ function getListenChoiceCount() {
 
 function initListenRound() {
   clearListenTimers();
+  clearListenFeedbackTimer();
   stopSpeech();
   state.listen.roundToken += 1;
   const sessionId = state.listen.sessionId;
@@ -3031,6 +3439,7 @@ function initListenRound() {
   const target = candidates[Math.floor(Math.random() * candidates.length)];
   state.listen.targetKey = target.key;
   state.listen.answered = false;
+  state.listen.feedback = { phase: "idle", wrongKey: null, hintedKey: null, replayHint: false };
 
   // Track recents (keep last 8)
   state.listen.recentTargets.push(target.key);
@@ -3063,6 +3472,13 @@ function renderListenGame() {
 
   // Prompt
   el.listenPrompt.textContent = "What did you hear?";
+  applyMiniGameStatus(el.listenStatus, getGameFeedbackConfig({
+    mode: "listen",
+    phase: state.listen.feedback.phase,
+  }));
+  if (el.listenReplay) {
+    el.listenReplay.classList.toggle("hinted", Boolean(state.listen.feedback.replayHint));
+  }
 
   // Progress
   const roundNum = state.listen.round + 1;
@@ -3077,6 +3493,12 @@ function renderListenGame() {
     const card = document.createElement("button");
     card.type = "button";
     card.className = "listen-card";
+    if (state.listen.feedback.hintedKey === entry.key) {
+      card.classList.add("hinted", "next-target");
+    }
+    if (state.listen.feedback.wrongKey === entry.key) {
+      card.classList.add("wrong", "wrong-soft");
+    }
     card.dataset.wordKey = entry.key;
 
     const artWrap = document.createElement("div");
@@ -3109,6 +3531,16 @@ function handleListenChoice(wordKey) {
     state.listen.answered = true;
     state.listen.correctStreak++;
     state.listen.round++;
+    clearListenFeedbackTimer();
+    state.listen.feedback = { phase: "correct", wrongKey: null, hintedKey: null, replayHint: false };
+    applyMiniGameStatus(el.listenStatus, getGameFeedbackConfig({
+      mode: "listen",
+      phase: "correct",
+    }));
+    if (el.listenReplay) el.listenReplay.classList.remove("hinted");
+    el.listenChoices.querySelectorAll(".listen-card").forEach((card) => {
+      card.classList.remove("hinted", "wrong", "wrong-soft");
+    });
 
     if (cardEl) {
       cardEl.classList.add("correct");
@@ -3158,12 +3590,13 @@ function handleListenChoice(wordKey) {
     playWrongSound();
     animateMascotReaction("sad");
 
-    if (cardEl) {
-      cardEl.classList.add("wrong");
-      cardEl.addEventListener("animationend", () => cardEl.classList.remove("wrong"), { once: true });
-    }
-
     state.listen.correctStreak = 0;
+    setListenFeedback({
+      phase: "wrong",
+      wrongKey: wordKey,
+      hintedKey: state.listen.targetKey,
+      replayHint: true,
+    }, 1800);
 
     // Replay the target word after a short delay to help
     state.listen.replayTimer = setTimeout(() => {
