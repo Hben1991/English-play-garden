@@ -2159,6 +2159,7 @@ button {
   z-index: 100;
   overflow: hidden;
 }
+.train-screen[hidden] { display: none; }
 
 .train-top-bar {
   display: flex;
@@ -2376,6 +2377,7 @@ button {
   padding: 16px;
   padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
+.train-controls[hidden] { display: none; }
 
 .train-add-btn {
   width: 80px;
@@ -2419,6 +2421,8 @@ button {
   align-items: center;
   gap: 16px;
   z-index: 10;
+}
+.train-challenge[hidden] { display: none;
 }
 
 .train-challenge-prompt {

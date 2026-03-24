@@ -2283,6 +2283,9 @@ function goHome() {
   el.gameScreen.hidden = true;
   el.homeScreen.hidden = false;
   el.app.classList.remove("fullscreen-game");
+  // Also hide train screen if open
+  const trainScr = document.getElementById("trainScreen");
+  if (trainScr) trainScr.hidden = true;
 }
 
 function openHomeDestination(target) {
@@ -3320,6 +3323,8 @@ function openTrainGame() {
   trainState.currentNumber = 0;
   trainState.challengeMode = false;
   trainState.challengeCount = 0;
+  trainEl.trainChallenge.hidden = true;
+  trainEl.trainControls.hidden = false;
   renderTrain();
   updateTrainCounter();
 
