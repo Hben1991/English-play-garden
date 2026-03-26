@@ -123,7 +123,7 @@
           </button>
         </header>
 
-        <nav class="game-modes" id="gameModes" aria-label="Game modes" hidden style="display:none!important"></nav>
+        <nav class="game-modes" id="gameModes" aria-label="Game modes"></nav>
 
       <section class="grid-view" id="gridView">
         <div class="grid-scroll">
@@ -191,6 +191,25 @@
           </div>
           <div class="listen-choices" id="listenChoices"></div>
           <div class="listen-progress" id="listenProgress"></div>
+        </div>
+
+        <!-- Piano Game -->
+        <div class="game-panel" id="pianoGame" data-game="piano" hidden>
+          <div class="piano-shell">
+            <div class="piano-shell-header">
+              <div class="piano-shell-kicker">Piano</div>
+              <div id="pianoTopicLabel" class="piano-shell-topic">Letters</div>
+            </div>
+            <div id="pianoTopicTabs" class="piano-topic-tabs" role="group" aria-label="Choose a piano topic"></div>
+            <div class="piano-shell-controls">
+              <p id="pianoPrompt" class="piano-shell-prompt" role="status" aria-live="polite" aria-atomic="true">Tap a key.</p>
+              <button id="pianoReplay" type="button" class="piano-shell-replay" data-piano-replay="prompt" aria-label="Hear the prompt again">
+                <span aria-hidden="true">🔊</span>
+                <span>Hear again</span>
+              </button>
+            </div>
+            <div id="pianoKeyGrid" class="piano-key-grid" aria-label="Piano keys"></div>
+          </div>
         </div>
       </section>
 
@@ -284,6 +303,7 @@
     </div>
 
     <script src="./engagement-utils.js"></script>
+    <script src="./piano-activity.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

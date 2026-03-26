@@ -23,6 +23,7 @@ const GAME_MODES = [
   { key: "memory", label: "Memory", icon: "\uD83E\uDDE0" },
   { key: "sort", label: "Sort", icon: "\uD83D\uDCE6" },
   { key: "listen", label: "Listen", icon: "\uD83D\uDD0A" },
+  { key: "piano", label: "Piano", icon: "\uD83C\uDFB9" },
 ];
 
 // === WORD DATA ===
@@ -608,6 +609,21 @@ const CURATED_EMOJI_MAP = {
   foot: "🦶", tooth: "🦷", mouth: "👄", teeth: "😁",
 };
 const engagementUtils = globalThis.EngagementUtils || {};
+const pianoActivity = globalThis.PianoActivity || {};
+const PIANO_TOPIC_STORAGE_KEY = "din-english-garden-piano-topic";
+const DEFAULT_PIANO_TOPIC = "letters";
+const PIANO_TOPIC_ORDER = Array.isArray(pianoActivity.PIANO_TOPIC_KEYS) && pianoActivity.PIANO_TOPIC_KEYS.length
+  ? pianoActivity.PIANO_TOPIC_KEYS
+  : ["letters", "words", "colors", "shapes", "consonants", "numbers"];
+const PIANO_KEY_THEME_PALETTE = [
+  { surface: "#FFF5EA", accent: "#FF9D76", shadow: "#A35D44", ink: "#5E3B32" },
+  { surface: "#FFFBE2", accent: "#F4B84C", shadow: "#9A6B20", ink: "#5A4124" },
+  { surface: "#EBF7F0", accent: "#64B884", shadow: "#2F6E49", ink: "#30513A" },
+  { surface: "#EAF4FF", accent: "#5DA7F6", shadow: "#2E5F9A", ink: "#2F4465" },
+  { surface: "#F4ECFF", accent: "#B184F4", shadow: "#6A48A0", ink: "#4F3A72" },
+  { surface: "#FFF0F6", accent: "#F07CB0", shadow: "#9B3F69", ink: "#6C3550" },
+];
+const PIANO_PLAYED_STATE_MS = 720;
 
 // === STATE ===
 
@@ -664,6 +680,246 @@ function getHomePrimaryActionConfig(target) {
     return engagementUtils.getHomePrimaryAction(target);
   }
   return { key: "spell", label: "Play Letters", href: "#spell" };
+}
+
+function normalizePianoTopic(topic) {
+  if (typeof pianoActivity.normalizePianoTopic === "function") {
+    return pianoActivity.normalizePianoTopic(topic);
+  }
+  if (typeof pianoActivity.getLastUsedPianoTopic === "function") {
+    return pianoActivity.getLastUsedPianoTopic(topic);
+  }
+  return DEFAULT_PIANO_TOPIC;
+}
+
+function setPianoTopic(topic, { persist = true } = {}) {
+  const nextTopic = normalizePianoTopic(topic);
+  state.piano.topic = nextTopic;
+  if (persist) {
+    saveToStorage(PIANO_TOPIC_STORAGE_KEY, nextTopic);
+  }
+  return nextTopic;
+}
+
+function getPianoTopicConfig(topic) {
+  if (typeof pianoActivity.getPianoTopicConfig === "function") {
+    return pianoActivity.getPianoTopicConfig(topic);
+  }
+  const normalizedTopic = normalizePianoTopic(topic);
+  const label = normalizedTopic === "letters"
+    ? "Letters"
+    : normalizedTopic.charAt(0).toUpperCase() + normalizedTopic.slice(1);
+  return {
+    key: normalizedTopic,
+    label,
+    prompt: normalizedTopic === "letters" ? "Tap a letter." : "Tap a key.",
+    replayLabel: "Hear again",
+  };
+}
+
+function getPianoTopicKeySet(topic) {
+  const normalizedTopic = normalizePianoTopic(topic);
+  const sourcePool = getPianoSourcePool(normalizedTopic);
+  if (typeof pianoActivity.getStablePianoKeySet === "function") {
+    return pianoActivity.getStablePianoKeySet(normalizedTopic, sourcePool);
+  }
+  return [];
+}
+
+function getPianoSourcePool(topic) {
+  switch (normalizePianoTopic(topic)) {
+    case "words":
+      return state.filteredWords.length ? state.filteredWords : WORDS;
+    case "colors":
+    case "numbers":
+      return WORDS.filter((entry) => entry.category === normalizePianoTopic(topic));
+    default:
+      return WORDS;
+  }
+}
+
+function getPianoGuidedTarget(topic, keySet, previousTarget) {
+  if (typeof pianoActivity.getNextPianoGuidedTarget === "function") {
+    return pianoActivity.getNextPianoGuidedTarget(keySet, previousTarget);
+  }
+  const first = Array.isArray(keySet) && keySet.length ? keySet[0] : null;
+  return first ? { key: first.key, label: first.label } : null;
+}
+
+function getPianoGuidedPrompt(topic, target) {
+  if (typeof pianoActivity.getPianoGuidedPrompt === "function") {
+    return pianoActivity.getPianoGuidedPrompt(topic, target);
+  }
+  return getPianoTopicConfig(topic).prompt;
+}
+
+function getPianoAudioPolicy(topic) {
+  if (typeof pianoActivity.getPianoAudioPolicy === "function") {
+    return pianoActivity.getPianoAudioPolicy(topic);
+  }
+  return { replaySource: "current-prompt", autoRepeatGuidedPrompt: false };
+}
+
+function getPianoReplayText(topic) {
+  if (typeof pianoActivity.getPianoReplayText === "function") {
+    return pianoActivity.getPianoReplayText(topic);
+  }
+  return getPianoTopicConfig(topic).replayLabel || "Hear again";
+}
+
+function getPianoLiveAnnouncement(topic, promptText) {
+  if (typeof pianoActivity.getPianoLiveAnnouncement === "function") {
+    return pianoActivity.getPianoLiveAnnouncement(topic, promptText);
+  }
+  const config = getPianoTopicConfig(topic);
+  const prompt = String(promptText || config.prompt || "").trim() || config.prompt;
+  return `${config.label}. ${prompt}`.trim();
+}
+
+function getPianoFocusRestoreKey(keySet, preferredKey) {
+  if (typeof pianoActivity.getPianoFocusRestoreKey === "function") {
+    return pianoActivity.getPianoFocusRestoreKey(keySet, preferredKey);
+  }
+  const key = String(preferredKey || "").trim();
+  if (!key) return "";
+  return Array.isArray(keySet) && keySet.some((item) => item && item.key === key) ? key : "";
+}
+
+function getClearedPianoTransientState(currentState) {
+  if (typeof pianoActivity.getClearedPianoTransientState === "function") {
+    return pianoActivity.getClearedPianoTransientState(currentState);
+  }
+  return {
+    ...(currentState || {}),
+    lastPlayedKey: "",
+    playedKeyTimer: null,
+    focusKey: "",
+  };
+}
+
+function getPianoKeyTheme(index, keyModel, topic) {
+  const fallbackTheme = PIANO_KEY_THEME_PALETTE[index % PIANO_KEY_THEME_PALETTE.length];
+  const tones = Array.isArray(keyModel?.colors) ? keyModel.colors : [];
+  const accent = keyModel?.color || tones[1] || fallbackTheme.accent;
+  const shadow = tones[2] || fallbackTheme.shadow;
+  const surface = tones[0] || fallbackTheme.surface;
+  const needsBrightInk = normalizePianoTopic(topic) === "colors" && Boolean(keyModel?.color);
+
+  return {
+    accent,
+    shadow,
+    surface: needsBrightInk ? accent : surface,
+    ink: needsBrightInk ? "#FFFFFF" : fallbackTheme.ink,
+  };
+}
+
+function clearPianoPlayedStateTimer() {
+  if (state.piano.playedKeyTimer) {
+    clearTimeout(state.piano.playedKeyTimer);
+    state.piano.playedKeyTimer = null;
+  }
+}
+
+function ensurePianoLiveRegion() {
+  if (el.pianoLiveRegion || !el.pianoGame) return;
+  const liveRegion = document.createElement("div");
+  liveRegion.setAttribute("role", "status");
+  liveRegion.setAttribute("aria-live", "polite");
+  liveRegion.setAttribute("aria-atomic", "true");
+  liveRegion.style.cssText = "position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;";
+  el.pianoGame.appendChild(liveRegion);
+  el.pianoLiveRegion = liveRegion;
+}
+
+function updatePianoLiveAnnouncement(message) {
+  ensurePianoLiveRegion();
+  if (!el.pianoLiveRegion) return;
+  const nextMessage = String(message || "").trim();
+  if (el.pianoLiveRegion.textContent === nextMessage) return;
+  el.pianoLiveRegion.textContent = nextMessage;
+}
+
+function clearPianoLiveAnnouncement() {
+  if (el.pianoLiveRegion) {
+    el.pianoLiveRegion.textContent = "";
+  }
+}
+
+function findPianoKeyButton(keyValue) {
+  if (!el.pianoKeyGrid || !keyValue) return null;
+  return Array.from(el.pianoKeyGrid.querySelectorAll("[data-piano-key]"))
+    .find((button) => button.dataset.pianoKey === keyValue) || null;
+}
+
+function getCurrentPianoFocusKey() {
+  const activeElement = document.activeElement;
+  if (!activeElement || typeof activeElement.closest !== "function") {
+    return "";
+  }
+  const pianoKeyButton = activeElement.closest("[data-piano-key]");
+  return pianoKeyButton?.dataset?.pianoKey || "";
+}
+
+function restorePianoKeyFocus(keyValue) {
+  const focusKey = getPianoFocusRestoreKey(state.piano.keySet, keyValue);
+  const button = findPianoKeyButton(focusKey);
+  if (!button || document.activeElement === button) return;
+  try {
+    button.focus({ preventScroll: true });
+  } catch (_error) {
+    button.focus();
+  }
+}
+
+function refreshPianoKeyButtonStates({ focusKey = "" } = {}) {
+  if (!el.pianoKeyGrid) return;
+  el.pianoKeyGrid.querySelectorAll("[data-piano-key]").forEach((button) => {
+    const buttonKey = button.dataset.pianoKey || "";
+    const isPlayed = state.piano.lastPlayedKey === buttonKey;
+    const isGuided = Boolean(state.piano.guidedTarget && state.piano.guidedTarget.key === buttonKey);
+
+    button.setAttribute("aria-pressed", isPlayed ? "true" : "false");
+    button.classList.toggle("is-played", isPlayed);
+    button.classList.toggle("guided", isGuided);
+    button.classList.toggle("has-swatch", state.piano.topic === "colors");
+  });
+
+  if (focusKey) {
+    restorePianoKeyFocus(focusKey);
+  }
+}
+
+function resetPianoTransientState({ render = false } = {}) {
+  clearPianoPlayedStateTimer();
+  const hadTransientState = Boolean(state.piano.lastPlayedKey || state.piano.playedKeyTimer || state.piano.focusKey);
+  Object.assign(state.piano, getClearedPianoTransientState(state.piano));
+  clearPianoLiveAnnouncement();
+  if (!hadTransientState) return;
+  if (render) {
+    refreshPianoKeyButtonStates();
+  }
+}
+
+function setPianoPlayedKey(keyValue, { focusKey = "" } = {}) {
+  state.piano.focusKey = getPianoFocusRestoreKey(state.piano.keySet, focusKey);
+  clearPianoPlayedStateTimer();
+  state.piano.lastPlayedKey = keyValue || "";
+  refreshPianoKeyButtonStates({ focusKey: state.piano.focusKey });
+  if (!keyValue) {
+    return;
+  }
+
+  state.piano.playedKeyTimer = setTimeout(() => {
+    state.piano.lastPlayedKey = "";
+    state.piano.playedKeyTimer = null;
+    state.piano.focusKey = getPianoFocusRestoreKey(
+      state.piano.keySet,
+      getCurrentPianoFocusKey() || state.piano.focusKey || keyValue,
+    );
+    refreshPianoKeyButtonStates({
+      focusKey: state.gameMode === "piano" ? state.piano.focusKey : "",
+    });
+  }, PIANO_PLAYED_STATE_MS);
 }
 
 function getPracticeCueText(input) {
@@ -727,6 +983,15 @@ const state = {
   gameMode: loadFromStorage("din-english-garden-gamemode", "spell"),
   viewMode: "grid",
   homeTarget: loadFromStorage("din-english-garden-home-target", "spell"),
+  piano: {
+    topic: normalizePianoTopic(loadFromStorage(PIANO_TOPIC_STORAGE_KEY, null)),
+    keySet: [],
+    guidedTarget: null,
+    promptText: "",
+    lastPlayedKey: "",
+    playedKeyTimer: null,
+    focusKey: "",
+  },
 
   // Pattern game state
   pattern: {
@@ -798,6 +1063,7 @@ function cacheElements() {
     "gridView", "wordGrid", "stageView",
     "slots", "tiles", "dots", "bottomBar", "gameStatus", "playCue", "replayRow",
     "gameModes", "gameArea", "spellGame", "patternGame", "memoryGame", "sortGame", "listenGame",
+    "pianoGame", "pianoTopicLabel", "pianoTopicTabs", "pianoPrompt", "pianoReplay", "pianoKeyGrid",
     "patternStatus", "patternSequence", "patternOptions",
     "memoryStatus", "memoryBoard",
     "sortStatus", "sortItem", "sortBuckets",
@@ -839,7 +1105,7 @@ function init() {
   el.homeScreen.hidden = false;
   el.gameScreen.hidden = true;
   if (el.backBtn) el.backBtn.hidden = true;
-  if (el.gameModes) el.gameModes.hidden = true;
+  setPianoTopic(state.piano.topic);
 }
 
 // === EVENTS ===
@@ -923,6 +1189,27 @@ function bindEvents() {
   if (el.listenReplay) {
     el.listenReplay.addEventListener("click", () => {
       replayListenTarget();
+    });
+  }
+
+  if (el.pianoGame) {
+    el.pianoGame.addEventListener("click", (event) => {
+      const topicBtn = event.target.closest("[data-piano-topic]");
+      if (topicBtn) {
+        handlePianoTopicSelect(topicBtn.dataset.pianoTopic);
+        return;
+      }
+
+      const replayBtn = event.target.closest("[data-piano-replay]");
+      if (replayBtn) {
+        handlePianoReplay();
+        return;
+      }
+
+      const keyBtn = event.target.closest("[data-piano-key]");
+      if (keyBtn) {
+        handlePianoKeyTap(keyBtn.dataset.pianoKey);
+      }
     });
   }
 
@@ -2494,6 +2781,7 @@ function enterGame(mode) {
 function goHome() {
   clearListenTimers();
   clearTransientUiState();
+  resetPianoTransientState();
   stopSpeech();
   el.gameScreen.hidden = true;
   el.homeScreen.hidden = false;
@@ -2557,6 +2845,10 @@ function selectGameMode(key) {
     clearListenTimers();
     stopSpeech();
   }
+  if (state.gameMode === "piano" && key !== "piano") {
+    resetPianoTransientState();
+    stopSpeech();
+  }
   state.gameMode = key;
   saveToStorage("din-english-garden-gamemode", key);
   renderGameModes();
@@ -2572,6 +2864,10 @@ function applyGameMode() {
   // Show the matching panel
   const activePanel = el.gameArea.querySelector(`[data-game="${state.gameMode}"]`);
   if (activePanel) activePanel.hidden = false;
+
+  if (el.gameModes) {
+    el.gameModes.hidden = false;
+  }
 
   // Force card view for non-spell games that need game-area visible
   if (state.gameMode !== "spell" && state.viewMode === "grid") {
@@ -2633,6 +2929,129 @@ function applyGameMode() {
     case "listen":
       initListenRound();
       break;
+    case "piano":
+      renderPianoGame();
+      break;
+  }
+}
+
+function renderPianoGame({ focusKey = "" } = {}) {
+  const config = getPianoTopicConfig(state.piano.topic);
+  const keySet = getPianoTopicKeySet(state.piano.topic);
+  const target = getPianoGuidedTarget(state.piano.topic, keySet, state.piano.guidedTarget) || null;
+  const restoreFocusKey = getPianoFocusRestoreKey(keySet, focusKey || getCurrentPianoFocusKey() || state.piano.focusKey);
+
+  state.piano.keySet = keySet;
+  state.piano.focusKey = restoreFocusKey;
+  if (!state.piano.guidedTarget || !keySet.some((key) => key.key === state.piano.guidedTarget.key)) {
+    state.piano.guidedTarget = target;
+  }
+  state.piano.promptText = getPianoGuidedPrompt(state.piano.topic, state.piano.guidedTarget) || config.prompt;
+  if (el.pianoGame) {
+    el.pianoGame.dataset.pianoTopic = state.piano.topic;
+  }
+
+  renderPianoTopicTabs();
+  renderPianoPrompt();
+  renderPianoKeyGrid({ focusKey: restoreFocusKey });
+}
+
+function renderPianoTopicTabs() {
+  if (!el.pianoTopicTabs) return;
+  el.pianoTopicTabs.innerHTML = "";
+  PIANO_TOPIC_ORDER.forEach((topicKey) => {
+    const config = getPianoTopicConfig(topicKey);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "piano-topic-btn" + (state.piano.topic === topicKey ? " active" : "");
+    button.dataset.pianoTopic = topicKey;
+    button.textContent = config.label;
+    el.pianoTopicTabs.appendChild(button);
+  });
+  if (el.pianoTopicLabel) {
+    el.pianoTopicLabel.textContent = getPianoTopicConfig(state.piano.topic).label;
+  }
+}
+
+function renderPianoPrompt() {
+  if (!el.pianoPrompt) return;
+  const config = getPianoTopicConfig(state.piano.topic);
+  const promptText = state.piano.promptText || config.prompt || "Tap a key.";
+  el.pianoPrompt.textContent = promptText;
+  updatePianoLiveAnnouncement(getPianoLiveAnnouncement(state.piano.topic, promptText));
+  if (el.pianoReplay) {
+    el.pianoReplay.setAttribute("aria-label", `${getPianoReplayText(state.piano.topic)} for ${config.label}`);
+    const replayLabel = el.pianoReplay.querySelector("span:not([aria-hidden])");
+    if (replayLabel) {
+      replayLabel.textContent = getPianoReplayText(state.piano.topic);
+    }
+  }
+}
+
+function renderPianoKeyGrid({ focusKey = "" } = {}) {
+  if (!el.pianoKeyGrid) return;
+  el.pianoKeyGrid.innerHTML = "";
+  el.pianoKeyGrid.style.setProperty("--piano-key-count", String(state.piano.keySet.length || 4));
+  state.piano.keySet.forEach((keyModel, index) => {
+    const theme = getPianoKeyTheme(index, keyModel, state.piano.topic);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "piano-key-btn";
+    button.dataset.pianoKey = keyModel.key;
+    button.dataset.pianoMode = state.piano.topic;
+    button.setAttribute("aria-label", `Play ${keyModel.label}`);
+    button.style.setProperty("--piano-key-surface", theme.surface);
+    button.style.setProperty("--piano-key-accent", theme.accent);
+    button.style.setProperty("--piano-key-shadow", theme.shadow);
+    button.style.setProperty("--piano-key-ink", theme.ink);
+    button.innerHTML = `<span class="piano-key-label">${keyModel.label}</span>`;
+    el.pianoKeyGrid.appendChild(button);
+  });
+  refreshPianoKeyButtonStates({ focusKey });
+}
+
+function handlePianoTopicSelect(topic) {
+  const nextTopic = setPianoTopic(topic);
+  setPianoPlayedKey("");
+  state.piano.guidedTarget = null;
+  state.piano.keySet = getPianoTopicKeySet(nextTopic);
+  state.piano.guidedTarget = getPianoGuidedTarget(nextTopic, state.piano.keySet, null);
+  state.piano.promptText = getPianoGuidedPrompt(nextTopic, state.piano.guidedTarget);
+  stopSpeech();
+  renderPianoGame();
+}
+
+function handlePianoReplay() {
+  const policy = getPianoAudioPolicy(state.piano.topic);
+  const prompt = policy.replaySource === "current-prompt"
+    ? (state.piano.promptText || getPianoTopicConfig(state.piano.topic).prompt)
+    : getPianoTopicConfig(state.piano.topic).prompt;
+  stopSpeech();
+  playTone(660, 0.08, 0.045);
+  speakText(prompt, { rate: getTeachingWordRate() });
+}
+
+function handlePianoKeyTap(keyValue) {
+  const keyModel = state.piano.keySet.find((item) => item.key === keyValue) || null;
+  if (!keyModel) return;
+
+  const focusKey = getCurrentPianoFocusKey() || keyModel.key;
+  setPianoPlayedKey(keyModel.key, { focusKey });
+  playTone(520 + Math.min(keyModel.key.length * 40, 220), 0.07, 0.045);
+  speakText(keyModel.label, { rate: getTeachingWordRate() });
+
+  const policy = getPianoAudioPolicy(state.piano.topic);
+  if (state.piano.guidedTarget && keyModel.key === state.piano.guidedTarget.key) {
+    playCorrectSound();
+    showMascotBubble(randomPhrase("correct"), 1100);
+
+    const nextTarget = getPianoGuidedTarget(state.piano.topic, state.piano.keySet, state.piano.guidedTarget);
+    state.piano.guidedTarget = nextTarget;
+    state.piano.promptText = getPianoGuidedPrompt(state.piano.topic, nextTarget);
+    if (policy.autoRepeatGuidedPrompt && nextTarget) {
+      speakText(state.piano.promptText, { rate: getTeachingWordRate() });
+    }
+    renderPianoGame({ focusKey });
   }
 }
 
